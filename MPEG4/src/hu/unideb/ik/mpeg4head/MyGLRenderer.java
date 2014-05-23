@@ -182,10 +182,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 
         // Set the camera position (View matrix)
-        //Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+        Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
 
         // Calculate the projection and view transformation
-        //Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
+        Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
 
         // Draw square
         //mSquare.draw(mMVPMatrix);
@@ -197,7 +197,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         //long time = SystemClock.uptimeMillis() % 4000L;
         //float angle = 0.090f * ((int) time);
 
-        //Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
+        Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
 
         // Combine the rotation matrix with the projection and camera view
         // Note that the mMVPMatrix factor *must be first* in order
@@ -208,7 +208,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         //mTriangle.draw(scratch);
         
         /* Draw the mesh... */
-        mesh.draw(unused, mModelMatrix, mViewMatrix, mProjectionMatrix, mRotationMatrix);
+        mesh.draw(unused, mMVPMatrix);
     }
 
     @Override

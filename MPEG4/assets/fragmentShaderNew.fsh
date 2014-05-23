@@ -6,5 +6,6 @@ varying vec2 v_TexCoordinate;   	// triangle per fragment.
 			  
 void main()                    		// The entry point for our fragment shader.
 {                              
-	gl_FragColor = texture2D(u_TextureSampler, v_TexCoordinate);		  
+	gl_FragColor = vec4(1.0, 1.0, 1.0, 0.0);
+	//gl_FragColor = texture2D(u_TextureSampler, v_TexCoordinate);		  
 }         

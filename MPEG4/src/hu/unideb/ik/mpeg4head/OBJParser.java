@@ -20,9 +20,9 @@ public class OBJParser {
 	Vector<Short> faces = new Vector<Short>();
 	Vector<Short> vtPointer = new Vector<Short>();
 	Vector<Short> vnPointer = new Vector<Short>();
-	Vector<Float> v = new Vector<Float>();
-	Vector<Float> vn = new Vector<Float>();
-	Vector<Float> vt = new Vector<Float>();
+	Vector<Float> v = new Vector<Float>();						//vertex coordinates
+	Vector<Float> vn = new Vector<Float>();						//vertex normals
+	Vector<Float> vt = new Vector<Float>();						//texture coordinates
 	Vector<TDModelPart> parts = new Vector<TDModelPart>();
 	Vector<Material> materials = null;
 

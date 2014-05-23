@@ -16,12 +16,13 @@ import javax.microedition.khronos.opengles.GL10;
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.opengl.GLES20;
+import android.util.Log;
 
 public class Mesh {
 
 	/* Number of coordinates per vertex. */
 	private static final int COORDS_PER_VERTEX = 3;
-	private static final int COORDS_PER_NORMAL = 3;
+	private static final int COORDS_PER_TEXCOORDS = 2;
 	private static final int BYTES_PER_FLOAT = 4;
 	
 	/* Helpers to get the files from assets containing the source code of the shaders. */
@@ -38,25 +39,17 @@ public class Mesh {
 	private int mProgram;
 	
 	/* Handles for the attributes, uniforms of the program. */
-	//private int s_vPositionHandleV;
-	//private int s_vNormalHandleV;
-	//private int mMHandleU;
-	//private int mVHandleU;
-	//private int mPHandleU;
-	//private int mRotationsHandleU;
-	//private int vLightHandleU;
 	private int a_PositionHandle;
 	private int a_TexCoordinateHandle;
+	private int u_MVPMatrixHandle;
 	private int u_TextureSamplerHandle;
-	
-	//private float[] lightPos = { 1.0f, 1.0f, 1.0f, 1.0f };
 	
 	Vector<Float> v;
 	Vector<Float> vn;
 	Vector<Float> vt;
 	Vector<TDModelPart> parts;
 	FloatBuffer vertexBuffer;
-	FloatBuffer normalsBuffer;
+	FloatBuffer texcoordsBuffer;
 
 	private String readShaderCodeFromFile(String fileName) {
 		String line = null;
@@ -76,6 +69,7 @@ public class Mesh {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+		Log.d("readShaderCodeFromFile", sb.toString());
 		return sb.toString();
 	}
 
@@ -88,18 +82,14 @@ public class Mesh {
 	    // add the source code to the shader and compile it
 	    GLES20.glShaderSource(shader, shaderCode);
 	    GLES20.glCompileShader(shader);
-
+	    Log.d("loadShader", "finishing");
 	    return shader;
 	}
 	
 	private void getAllHandles() {
-		s_vPositionHandleV = GLES20.glGetAttribLocation(mProgram, "s_vPosition");
-		s_vNormalHandleV = GLES20.glGetAttribLocation(mProgram, "s_vNormal");
-		//mMHandleU = GLES20.glGetUniformLocation(mProgram, "mM");
-		//mVHandleU = GLES20.glGetUniformLocation(mProgram, "mV");
-		//mPHandleU = GLES20.glGetUniformLocation(mProgram, "mP");
-		//mRotationsHandleU = GLES20.glGetUniformLocation(mProgram, "mRotations");
-		//vLightHandleU = GLES20.glGetUniformLocation(mProgram, "vLight");
+		a_PositionHandle = GLES20.glGetAttribLocation(mProgram, "a_Position");
+		a_TexCoordinateHandle = GLES20.glGetAttribLocation(mProgram, "a_TexCoordinate");
+		u_MVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "u_MVPMatrix");
 		GLES20.glGetUniformLocation(mProgram, "u_MVPMatrix");
 	}
 	
@@ -128,37 +118,35 @@ public class Mesh {
 	}
 	
 	
-	public void draw(GL10 gl, float[] mM, float[] mV, float[] mP, float[] rots) {
+	public void draw(GL10 gl, float[] mMVP) {
 		GLES20.glUseProgram(mProgram);
 		
-		GLES20.glEnableVertexAttribArray(s_vPositionHandleV);
-	    GLES20.glVertexAttribPointer(s_vPositionHandleV, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, 0, vertexBuffer);
+		GLES20.glEnableVertexAttribArray(a_PositionHandle);
+	    GLES20.glVertexAttribPointer(a_PositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, 0, vertexBuffer);
 	    
-	    GLES20.glEnableVertexAttribArray(s_vNormalHandleV);
-	    GLES20.glVertexAttribPointer(s_vNormalHandleV, COORDS_PER_NORMAL, GLES20.GL_FLOAT, false, 0, normalsBuffer);
+	    GLES20.glEnableVertexAttribArray(a_TexCoordinateHandle);
+	    GLES20.glVertexAttribPointer(a_TexCoordinateHandle, COORDS_PER_TEXCOORDS, GLES20.GL_FLOAT, false, 0, texcoordsBuffer);
 	    
-		GLES20.glUniformMatrix4fv(mMHandleU, 1, false, mM, 0);
-		GLES20.glUniformMatrix4fv(mVHandleU, 1, false, mV, 0);
-		GLES20.glUniformMatrix4fv(mPHandleU, 1, false, mP, 0);
-		GLES20.glUniformMatrix4fv(mRotationsHandleU, 1, false, rots, 0);
-		GLES20.glUniform4fv(vLightHandleU, 1, lightPos, 0);
+		GLES20.glUniformMatrix4fv(u_MVPMatrixHandle, 1, false, mMVP, 0);
+		/* TEXTÚRA BETÖLTÉSE ÉS ÁDATÁSA A UNIFORM-NAK!!!!!!! */ 
 		
-		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, s_vPositionHandleV);
+				
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, a_PositionHandle);
 	    GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, v.size());
 	}
 	
 	public void buildBuffers(){
-		ByteBuffer vBuf = ByteBuffer.allocateDirect(v.size() * 4);
+		ByteBuffer vBuf = ByteBuffer.allocateDirect(v.size() * BYTES_PER_FLOAT);
 		vBuf.order(ByteOrder.nativeOrder());
 		vertexBuffer = vBuf.asFloatBuffer();
 		vertexBuffer.put(toPrimitiveArrayF(v));
 		vertexBuffer.position(0);
 		
-		ByteBuffer nBuf = ByteBuffer.allocateDirect(vn.size() * 4);
-		nBuf.order(ByteOrder.nativeOrder());
-		normalsBuffer = nBuf.asFloatBuffer();
-		normalsBuffer.put(toPrimitiveArrayF(vn));
-		normalsBuffer.position(0);
+		ByteBuffer tcBuf = ByteBuffer.allocateDirect(vt.size() * BYTES_PER_FLOAT);
+		tcBuf.order(ByteOrder.nativeOrder());
+		texcoordsBuffer = tcBuf.asFloatBuffer();
+		texcoordsBuffer.put(toPrimitiveArrayF(vt));
+		texcoordsBuffer.position(0);
 	}
 
 	private static float[] toPrimitiveArrayF(Vector<Float> vector){
@@ -172,16 +160,16 @@ public class Mesh {
 	
 	public String toString(){
 		String str=new String();
-		str+="Number of parts: "+parts.size();
+		//str+="Number of parts: "+parts.size();
 		str+="\nNumber of vertexes: "+v.size();
-		str+="\nNumber of vns: "+vn.size();
+		//str+="\nNumber of vns: "+vn.size();
 		str+="\nNumber of vts: "+vt.size();
-		str+="\n/////////////////////////\n";
+		/*str+="\n/////////////////////////\n";
 		for(int i=0; i<parts.size(); i++){
 			str+="Part "+i+'\n';
 			str+=parts.get(i).toString();
 			str+="\n/////////////////////////";
-		}
+		}*/
 		return str;
 	}
 }
