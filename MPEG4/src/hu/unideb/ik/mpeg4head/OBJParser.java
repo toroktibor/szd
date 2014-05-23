@@ -99,12 +99,21 @@ public class OBJParser {
 					vn);
 			parts.add(model);
 		}
-		Mesh mesh = new Mesh(context, v, vn, vt, parts, faces, materials.get(0));
-		mesh.buildBuffers();
-		Log.d(TAG, mesh.toString());
+		if(materials.size() != 0) {
+			Mesh mesh = new Mesh(context, v, vn, vt, parts, faces, materials.get(0));
+			mesh.buildBuffers();
+			//Log.d(TAG, mesh.toString());
+			return mesh;
+		}
+		else {
+			Log.d(TAG, "ERROR! No material file found with specified name(s)...");
+		}
+			
+		return null;
+		
 		
 		//return t;
-		return mesh;
+		
 	}
 
 	private void readVLine(String line) {

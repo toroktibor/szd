@@ -9,7 +9,7 @@
 # Faces: 6476
 #
 ####
-mtllib ./texture_face_final_meshlab.mtl
+mtllib texture_face_final_meshlab.mtl
 
 vn -5.724033 -1.010982 1.491812
 v -11.134166 -6.720845 7.571433

@@ -4,6 +4,10 @@ import javax.microedition.khronos.egl.EGLConfig;
 import javax.microedition.khronos.opengles.GL10;
 
 import android.content.Context;
+import android.hardware.Sensor;
+import android.hardware.SensorEvent;
+import android.hardware.SensorEventListener;
+import android.hardware.SensorManager;
 import android.opengl.GLES20;
 import android.opengl.GLSurfaceView;
 import android.opengl.Matrix;
@@ -19,13 +23,16 @@ import android.util.Log;
  *   <li>{@link android.opengl.GLSurfaceView.Renderer#onSurfaceChanged}</li>
  * </ul>
  */
-public class MyGLRenderer implements GLSurfaceView.Renderer {
+public class MyGLRenderer implements GLSurfaceView.Renderer, SensorEventListener {
 
     private static final String TAG = "MyGLRenderer";
 
     private Mesh mesh;
     private Context context;
 
+    private Sensor gravity;
+    private SensorManager sensorMgr;
+    
     private float[] mMVPMatrix = new float[16];
     private float[] mModelMatrix = new float[16];
     private float[] mProjectionMatrix = new float[16];
@@ -65,8 +72,27 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     public float transY = 0.0f;
     public float transZ = -0.0f;
     
+    private float diffGravityX;
+    private float diffGravityY;
+    private float diffGravityZ;
+    
+    private float originGravityX;
+    private float originGravityY;
+    private float originGravityZ;
+    
+    private float newGravityX;
+    private float newGravityY;
+    private float newGravityZ;
+    
+    private static final float epsilon = 0.5f;
+    
+    private boolean newOrientation = true;
+    
 	public MyGLRenderer(Context ctx) {
     	context = ctx;
+    	sensorMgr = (SensorManager) context.getSystemService(Context.SENSOR_SERVICE);
+    	gravity = sensorMgr.getDefaultSensor(Sensor.TYPE_GRAVITY); 
+    	
     }
 	
     public void makeModelMatrix() {
@@ -119,6 +145,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         Log.d(TAG, "onSurfaceCreated - makeModelMatrix");
         makeMVPMatrix();
         Log.d(TAG, "onSurfaceCreated - makeMVPMatrix");  
+        
         
         OBJParser parser = new OBJParser(context);
         String modelname = "texture_face_final_meshlab.obj";
@@ -233,5 +260,41 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
     public void setAngle(float angle) {
         mAngle = angle;
     }
+
+	@Override
+	public void onAccuracyChanged(Sensor sensor, int accuracy) {
+		Log.d(TAG, "onSensorChanged accuracy = " + accuracy);
+	}
+
+	@Override
+	public void onSensorChanged(SensorEvent event) {
+		Log.d(TAG, "onSensorChanged begin");
+
+		switch (event.sensor.getType()) {
+		case Sensor.TYPE_GRAVITY:
+			Log.d(TAG, "gravity sensor values coming, Baby :)");
+			if(newOrientation) {
+				originGravityX = event.values[0];
+				originGravityY = event.values[1];
+				originGravityZ = event.values[2];
+			}
+			else {
+				newGravityX = event.values[0];
+				newGravityY = event.values[1];
+				newGravityZ = event.values[2];	
+				diffGravityX = originGravityX - newGravityX;
+				diffGravityY = originGravityY - newGravityY;
+				diffGravityZ = originGravityZ - newGravityZ;
+				if((diffGravityX > epsilon )|| (diffGravityY > epsilon) || (diffGravityZ > epsilon)) {
+					
+				}
+			}
+			break;
+		default:
+			break;
+		}
+		
+		Log.d(TAG, "onSensorChanged finish");
+	}
 
 }
