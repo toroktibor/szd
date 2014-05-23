@@ -4,8 +4,11 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
+import android.util.Log;
+
 
 public class Material {
+	private static final String TAG = "Material";
 	String name;
 	float[] ambientColor; //ambient color
 	float[] diffuseColor;
@@ -17,6 +20,7 @@ public class Material {
 	
 	public Material(String name){
 		this.name=name;
+		//Log.d(TAG, "New material object: " + name);
 	}
 	public String getName() {
 		return name;
@@ -115,15 +119,17 @@ public class Material {
 
 	public void setTextureFile(String textureFile) {
 		this.textureFile = textureFile;
+		//Log.d(TAG, "material file for " + name + " is \"" + textureFile + "\"");
 	}
 	public String toString(){
 		String str=new String();
 		str+="Material name: "+name;	
-		str+="\nAmbient color: "+ambientColor.toString();
-		str+="\nDiffuse color: "+diffuseColor.toString();	
-		str+="\nSpecular color: "+specularColor.toString();
-		str+="\nAlpha: "+alpha;
-		str+="\nShine: "+shine;
+		//str+="\nAmbient color: "+ambientColor.toString();
+		//str+="\nDiffuse color: "+diffuseColor.toString();	
+		//str+="\nSpecular color: "+specularColor.toString();
+		//str+="\nAlpha: "+alpha;
+		//str+="\nShine: "+shine;
+		str+="\nfile: " + textureFile;
 		return str;
 	}
 }

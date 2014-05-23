@@ -28,6 +28,7 @@ public class Mesh {
 	/* Number of coordinates per vertex. */
 	private static final int COORDS_PER_VERTEX = 3;
 	private static final int COORDS_PER_TEXCOORDS = 2;
+	private static final String TAG = "Mesh";
 	
 	
 	/* Helpers to get the files from assets containing the source code of the shaders. */
@@ -133,15 +134,15 @@ public class Mesh {
 	
 	public void draw(GL10 gl, float[] mMVP) {
 		GLES20.glUseProgram(mProgram);
-		
+		Log.d(TAG, "useProgram");
 		GLES20.glEnableVertexAttribArray(a_PositionHandle);
 	    GLES20.glVertexAttribPointer(a_PositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, 0, vertexBuffer);
-	    
+	    Log.d(TAG, "vertex[] -> a_Position buffer");
 	    GLES20.glEnableVertexAttribArray(a_TexCoordinateHandle);
 	    GLES20.glVertexAttribPointer(a_TexCoordinateHandle, COORDS_PER_TEXCOORDS, GLES20.GL_FLOAT, false, 0, texcoordsBuffer);
-	    
+	    Log.d(TAG, "texcoord[] -> a_TexCoordinate buffer");
 		GLES20.glUniformMatrix4fv(u_MVPMatrixHandle, 1, false, mMVP, 0);
-		
+		Log.d(TAG, "getUniform MVP");
 		/* TEXTÚRA BETÖLTÉSE ÉS ÁDATÁSA A UNIFORM-NAK!!!!!!! */ 
 		/* NE FELEJTSEM EL ÁTÍRNI A FRAGMENT SHADERT KONSTANS SZÍNRŐL TEXTÚRA KEZELÉSÉRE!!!!!!!!!!!!!!!! */
 		/*loadTextureFromAssets(gl);
@@ -155,10 +156,14 @@ public class Mesh {
 		GLES20.glUniform1i(u_TextureSamplerHandle, 0); 
 		*/
 		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, a_PositionHandle);
+		Log.d(TAG, "bindBuffer a_Position");
 		GLES20.glGenBuffers(indicesHandle, indexBuffer);
+		Log.d(TAG, "genBuffer ELEMENTS");
 		GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, indicesHandle);
+		Log.d(TAG, "indices[] -> GL_ELEMENT_ARRAY");
 
 		GLES20.glDrawElements(GLES20.GL_TRIANGLES, faces.size(), GLES20.GL_INT, indexBuffer); 
+		Log.d(TAG, "DrawElements...");
 	    //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, v.size());
 	}
 	

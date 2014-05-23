@@ -7,8 +7,11 @@ import java.io.InputStreamReader;
 import java.util.Vector;
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.util.Log;
 
 public class MTLParser {
+	
+	private static final String TAG = "MTLParser";
 
 	public static Vector<Material> loadMTL(Context ctx, String fileName) {
 		AssetManager assetMgr = ctx.getAssets();
@@ -18,19 +21,23 @@ public class MTLParser {
 		String line;
 		Material currentMtl = null;
 		try { // try to open file
-			reader = new BufferedReader(new InputStreamReader(
-					assetMgr.open(fileName)));
+			reader = new BufferedReader(new InputStreamReader(assetMgr.open(fileName)));
 		} catch (IOException e) {
+			Log.e(TAG, "Hiba a material fájl parse-olása közben!!! Nincs ilyen fájl.");
 		}
 		if (reader != null) {
 			try {// try to read lines of the file
 				while ((line = reader.readLine()) != null) {
 					if (line.startsWith("newmtl")) {
-						if (currentMtl != null)
+						//Log.d(TAG, "newmtl");
+						if (currentMtl == null) {
+							String mtName = line.split("[ ]+", 2)[1];
+							currentMtl = new Material(mtName);
+						}
+						else if (currentMtl != null) {
 							materials.add(currentMtl);
-						String mtName = line.split("[ ]+", 2)[1];
-						currentMtl = new Material(mtName);
-					} 
+						}
+					}
 					else if (line.startsWith("Ka")) {
 						String[] str = line.split("[ ]+");
 						currentMtl.setAmbientColor(Float.parseFloat(str[1]),
@@ -66,10 +73,13 @@ public class MTLParser {
 						currentMtl.setTextureFile(str[1]);
 					} 
 					else if (line.startsWith("map_Kd")) {
+						//Log.d(TAG, "map_Kd");
 						String[] str = line.split("[ ]+");
 						currentMtl.setTextureFile(str[1]);
 					}
 				}
+				if (currentMtl != null)
+					materials.add(currentMtl);
 			} catch (Exception e) {
 				// TODO: handle exception
 			}

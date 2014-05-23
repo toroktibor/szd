@@ -46,7 +46,7 @@ public class OBJParser {
 		try { 
 			/* Amíg van az új sorban tartalom ... */
 			while ((line = reader.readLine()) != null) {
-				Log.e("obj", line);
+				//Log.e("obj", line);
 				/* Ez a sor felület pontjainak indexeit tartalmazza, aszerint dolgozzuk fel. */
 				if (line.startsWith("f")) 			readFLine(line);
 				/* Ez a sor normálvektorokat tartalmaz, aszerint dolgozzuk fel. */
@@ -83,11 +83,13 @@ public class OBJParser {
 						// TODO: handle exception
 					}
 				} else if (line.startsWith("mtllib")) {
-					materials = MTLParser.loadMTL(context,
-							line.split("[ ]+")[1]);
+					//Log.d(TAG, "mtllib");
+					String matName =  line.split("[ ]+")[1];
+					//Log.d(TAG, "Name of the material is: " + matName);
+					materials = MTLParser.loadMTL(context,matName);
 					for (int i = 0; i < materials.size(); i++) {
 						Material mat = materials.get(i);
-						Log.e("materials", mat.toString());
+						//Log.e("materials", mat.toString());
 					}
 				}
 			}
@@ -102,18 +104,11 @@ public class OBJParser {
 		if(materials.size() != 0) {
 			Mesh mesh = new Mesh(context, v, vn, vt, parts, faces, materials.get(0));
 			mesh.buildBuffers();
-			//Log.d(TAG, mesh.toString());
+			Log.d(TAG, mesh.toString());
 			return mesh;
 		}
-		else {
-			Log.d(TAG, "ERROR! No material file found with specified name(s)...");
-		}
-			
+		Log.d(TAG, "ERROR! No material file found with specified name(s)...");
 		return null;
-		
-		
-		//return t;
-		
 	}
 
 	private void readVLine(String line) {
