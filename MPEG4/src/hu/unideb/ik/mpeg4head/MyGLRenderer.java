@@ -68,16 +68,27 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 	public MyGLRenderer(Context ctx) {
     	context = ctx;
     }
+	
+    public void makeModelMatrix() {
+        Matrix.multiplyMM(tempMatrix, 0, mRotationMatrix, 0, mScaleMatrix, 0);
+        Matrix.multiplyMM(mModelMatrix, 0, mTranslateMatrix	, 0, tempMatrix, 0);
+    }
+    
+    public void makeMVPMatrix() {
+    	Matrix.multiplyMM(tempMatrix, 0, mViewMatrix, 0, mProjectionMatrix, 0);
+        Matrix.multiplyMM(mMVPMatrix, 0, mModelMatrix, 0, tempMatrix, 0);
+    }
     
     @Override
     public void onSurfaceCreated(GL10 unused, EGLConfig config) {
 
+    	Log.d(TAG, "onSurfaceCreated begin");
         // Set the background frame color
         GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
 
         theta = 0.0f;
         scaleAmount = 1.0f;
-                       
+    	    
         Matrix.setIdentityM(mModelMatrix, 0);
         Matrix.setIdentityM(mProjectionMatrix, 0);
         Matrix.setIdentityM(mViewMatrix, 0);
@@ -91,65 +102,76 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         eyeX = 0.0f;	eyeY = 0.0f;	eyeZ = 1.0f;
         ctrX = 0.0f;	ctrY = 0.0f;	ctrZ = 0.0f;
         upX = 0.0f;		upY = 1.0f;     upZ = 0.0f;
-        
+        Log.d(TAG, "onSurfaceCreated - identify matrices, set primitive values");       
         Matrix.frustumM(mProjectionMatrix, 0, -1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 100.0f);
         Matrix.setLookAtM(mViewMatrix, 0, eyeX, eyeY, eyeZ, ctrX, ctrY, ctrZ, upX, upY, upZ);
         Matrix.scaleM(mScaleMatrix, 0, scaleAmount, scaleAmount, scaleAmount);
+     	Log.d(TAG, "onSurfaceCreated - frustrum, setLookAt, scaleM matrices");    
+     	
         float[] yAxis = { 0.0f, 1.0f, 0.0f };
         
         /* Now we are only rotating around Y axis..... */
         Matrix.rotateM(mRotationMatrix, 0, theta, yAxis[0], yAxis[1], yAxis[2]);
         Matrix.translateM(mTranslateMatrix, 0, transX, transY, transZ);
+        Log.d(TAG, "onSurfaceCreated - rotateM, translate matrices");       
         
-        Matrix.multiplyMM(tempMatrix, 0, mRotationMatrix, 0, mScaleMatrix, 0);
-        Matrix.multiplyMM(mModelMatrix, 0, mTranslateMatrix	, 0, tempMatrix, 0);
-        
-        Matrix.multiplyMM(mMVPMatrix, 0, mViewMatrix, 0, mProjectionMatrix, 0);
+        makeModelMatrix();
+        Log.d(TAG, "onSurfaceCreated - makeModelMatrix");
+        makeMVPMatrix();
+        Log.d(TAG, "onSurfaceCreated - makeMVPMatrix");  
         
         OBJParser parser = new OBJParser(context);
-        mesh = parser.parseOBJ("texture_face_final_meshlab.obj");
-        //mesh = parser.parseOBJ("dragon.obj");
-        Log.e("TEST", mesh.toString());
+        String modelname = "texture_face_final_meshlab.obj";
+        //String modelname = "dragon.obj";
+        mesh = parser.parseOBJ(modelname);
+        Log.d(TAG, "loaded the modell '" + modelname + "'");
+        Log.e(TAG, mesh.toString());
     }
 
     @Override
     public void onDrawFrame(GL10 unused) {
-        //float[] scratch = new float[16];
-
+    	 Log.d(TAG, "onDrawFrame begin");
+    	 
         // Draw background color
         GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
-
+   	 	Log.d(TAG, "onDrawFrame - glClear");
+   	 	
         // Set the camera position (View matrix)
         Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
-
-        // Calculate the projection and view transformation
-        Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, mViewMatrix, 0);
-
-        // Draw square
-        //mSquare.draw(mMVPMatrix);
-        
+   	 	Log.d(TAG, "onDrawFrame - setLookAtM");
+   	 	
         // Create a rotation for the triangle
-
         long time = SystemClock.uptimeMillis() % 4000L;
         mAngle = 0.090f * ((int) time);
-
+        Log.d(TAG, "onDrawFrame - processed rotating angle");
         Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
+        Log.d(TAG, "onDrawFrame - setRotateM");
+
         
+        // Calculate the modified Model and MVP matrix
+        makeModelMatrix();
+        makeMVPMatrix();
+   	 	Log.d(TAG, "makeModel, makeMVPMatrix"); 
         /* Draw the mesh... */
         mesh.draw(unused, mMVPMatrix);
+        Log.d(TAG, "mesh.draw()");
+   	 	Log.d(TAG, "onDrawFrame finish");
     }
-
+    
     @Override
     public void onSurfaceChanged(GL10 unused, int width, int height) {
+    	Log.d(TAG, "onSurfaceChaned begin");
         // Adjust the viewport based on geometry changes,
         // such as screen rotation
         GLES20.glViewport(0, 0, width, height);
-
+        Log.d(TAG, "onSurfaceChaned - glViewport");
         float ratio = (float) width / height;
 
         // this projection matrix is applied to object coordinates
         // in the onDrawFrame() method
         Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+    	Log.d(TAG, "onSurfaceChaned - frustrumM");
+    	Log.d(TAG, "onSurfaceChaned finish");
 
     }
 

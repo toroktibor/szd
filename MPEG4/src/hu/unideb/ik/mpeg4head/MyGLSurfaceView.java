@@ -17,6 +17,7 @@ package hu.unideb.ik.mpeg4head;
 
 import android.content.Context;
 import android.opengl.GLSurfaceView;
+import android.util.Log;
 import android.view.MotionEvent;
 
 /**
@@ -27,17 +28,23 @@ import android.view.MotionEvent;
 public class MyGLSurfaceView extends GLSurfaceView {
 
     private final MyGLRenderer mRenderer;
+    private static final String TAG = "MyGLRSurfaceView";
 
     public MyGLSurfaceView(Context context) {
-        super(context);
-
+    	super(context);
+    	Log.d(TAG, "constructor begin");
+        
         // Create an OpenGL ES 2.0 context.
         setEGLContextClientVersion(2);
-
+        Log.d(TAG, "setEGLContextClientVersion(2)");
+       
         // Set the Renderer for drawing on the GLSurfaceView
         mRenderer = new MyGLRenderer(context);
-        setRenderer(mRenderer);
+        Log.d(TAG, "new MyGLRenderer(context)");
 
+        setRenderer(mRenderer);
+        Log.d(TAG, "setRenderer(mRenderer);");
+        Log.d(TAG, "constructor finish");
         // Render the view only when there is a change in the drawing data
         //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
@@ -51,7 +58,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
         // MotionEvent reports input details from the touch screen
         // and other input controls. In this case, you are only
         // interested in events where the touch position changed.
-
+    	Log.d(TAG, "onTouchEvent begin");
         float x = e.getX();
         float y = e.getY();
 
@@ -79,6 +86,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
 
         mPreviousX = x;
         mPreviousY = y;
+    	Log.d(TAG, "onTouchEvent finish");
         return true;
     }
 
