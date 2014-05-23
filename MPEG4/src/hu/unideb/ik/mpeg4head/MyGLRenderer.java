@@ -1,18 +1,3 @@
-/*
- * Copyright (C) 2011 The Android Open Source Project
- *
- * Licensed under the Apache License, Version 2.0 (the "License");
- * you may not use this file except in compliance with the License.
- * You may obtain a copy of the License at
- *
- *      http://www.apache.org/licenses/LICENSE-2.0
- *
- * Unless required by applicable law or agreed to in writing, software
- * distributed under the License is distributed on an "AS IS" BASIS,
- * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
- * See the License for the specific language governing permissions and
- * limitations under the License.
- */
 package hu.unideb.ik.mpeg4head;
 
 import javax.microedition.khronos.egl.EGLConfig;
@@ -37,50 +22,10 @@ import android.util.Log;
 public class MyGLRenderer implements GLSurfaceView.Renderer {
 
     private static final String TAG = "MyGLRenderer";
-    //private Triangle mTriangle;
-    //private Square   mSquare;
 
     private Mesh mesh;
     private Context context;
-    /*
-    // mMVPMatrix is an abbreviation for "Model View Projection Matrix"
-    private final float[] mMVPMatrix = new float[16];
-    private float[] mModelMatrix = new float[16];
-    private float[] mProjectionMatrix = new float[16];
-    private float[] mViewMatrix = new float[16];
-    
-    private float[] mRotXMatrix = new float[16];
-    private float[] mRotYMatrix = new float[16];
-    private float[] mRotZMatrix = new float[16]; 
-    private final float[] mAllRotationMatrix = new float[16];
-    
-    private float[] mTransMatrix = new float[16];
-    private float[] mScaleMatrix = new float[16];
-    
-    private float[] mTempMatrix = new float[16];
 
-    private float scaleAmount;
-    private float theta;
-    private float mAngle;
-
-	private float eyeX;
-	private float eyeY;
-	private float eyeZ;
-	private float centerX;
-	private float centerY;
-	private float centerZ;
-	private float upY;
-	private float upZ;
-	private float upX;
-
-	private static final float[] xAxis = { 1.0f, 0.0f, 0.0f };
-	private static final float[] yAxis = { 0.0f, 1.0f, 0.0f };
-	private static final float[] zAxis = { 0.0f, 0.0f, 1.0f };
-	
-	private float transX = 0.0f;
-	private float transY = -1.5f;
-	private float transZ = -2.0f;
-	*/
     private float[] mMVPMatrix = new float[16];
     private float[] mModelMatrix = new float[16];
     private float[] mProjectionMatrix = new float[16];
@@ -132,9 +77,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
 
         theta = 0.0f;
         scaleAmount = 1.0f;
-        //mTriangle = new Triangle();
-        //mSquare   = new Square();
-               
+                       
         Matrix.setIdentityM(mModelMatrix, 0);
         Matrix.setIdentityM(mProjectionMatrix, 0);
         Matrix.setIdentityM(mViewMatrix, 0);
@@ -145,20 +88,15 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         Matrix.setIdentityM(mScaleMatrix, 0);
         Matrix.setIdentityM(tempMatrix, 0);
         
-        eyeX = 0.0f;
-        eyeY = 0.0f;
-        eyeZ = 1.0f;
-        ctrX = 0.0f;
-        ctrY = 0.0f;
-        ctrZ = 0.0f;
-        upX = 0.0f;
-        upY = 1.0f;
-        upZ = 0.0f;
+        eyeX = 0.0f;	eyeY = 0.0f;	eyeZ = 1.0f;
+        ctrX = 0.0f;	ctrY = 0.0f;	ctrZ = 0.0f;
+        upX = 0.0f;		upY = 1.0f;     upZ = 0.0f;
         
         Matrix.frustumM(mProjectionMatrix, 0, -1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 100.0f);
         Matrix.setLookAtM(mViewMatrix, 0, eyeX, eyeY, eyeZ, ctrX, ctrY, ctrZ, upX, upY, upZ);
         Matrix.scaleM(mScaleMatrix, 0, scaleAmount, scaleAmount, scaleAmount);
         float[] yAxis = { 0.0f, 1.0f, 0.0f };
+        
         /* Now we are only rotating around Y axis..... */
         Matrix.rotateM(mRotationMatrix, 0, theta, yAxis[0], yAxis[1], yAxis[2]);
         Matrix.translateM(mTranslateMatrix, 0, transX, transY, transZ);
@@ -192,20 +130,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer {
         
         // Create a rotation for the triangle
 
-        // Use the following code to generate constant rotation.
-        // Leave this code out when using TouchEvents.
-        //long time = SystemClock.uptimeMillis() % 4000L;
-        //float angle = 0.090f * ((int) time);
+        long time = SystemClock.uptimeMillis() % 4000L;
+        mAngle = 0.090f * ((int) time);
 
         Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
-
-        // Combine the rotation matrix with the projection and camera view
-        // Note that the mMVPMatrix factor *must be first* in order
-        // for the matrix multiplication product to be correct.
-        //Matrix.multiplyMM(scratch, 0, mMVPMatrix, 0, mRotationMatrix, 0);
-
-        // Draw triangle
-        //mTriangle.draw(scratch);
         
         /* Draw the mesh... */
         mesh.draw(unused, mMVPMatrix);

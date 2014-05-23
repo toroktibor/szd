@@ -3,22 +3,22 @@ package hu.unideb.ik.mpeg4head;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
+import java.nio.IntBuffer;
 import java.nio.ShortBuffer;
 import java.util.Vector;
 
 public class TDModelPart {
-	private static final int BYTES_PER_SHORT = 2;
-	private static final int BYTES_PER_FLOAT = 4;
 	
 	private static final int COORDS_PER_VERTEX = 3;
-	Vector<Short> faces;
-	Vector<Short> vtPointer;
-	Vector<Short> vnPointer;
-	Material material;
+
+	private Vector<Integer> faces;
+	private Vector<Short> vtPointer;
+	private Vector<Short> vnPointer;
+	private Material material;
 	private FloatBuffer normalBuffer;
-	ShortBuffer faceBuffer;
+	private IntBuffer faceBuffer;
 	
-	public TDModelPart(Vector<Short> faces, Vector<Short> vtPointer,
+	public TDModelPart(Vector<Integer> faces, Vector<Short> vtPointer,
 			Vector<Short> vnPointer, Material material, Vector<Float> vn) {
 		super();
 		this.faces = faces;
@@ -26,7 +26,7 @@ public class TDModelPart {
 		this.vnPointer = vnPointer;
 		this.material = material;
 		
-		ByteBuffer byteBuf = ByteBuffer.allocateDirect(vnPointer.size() * BYTES_PER_FLOAT * COORDS_PER_VERTEX);
+		ByteBuffer byteBuf = ByteBuffer.allocateDirect(vnPointer.size() * TypeSizes.BYTES_PER_FLOAT * COORDS_PER_VERTEX);
 		byteBuf.order(ByteOrder.nativeOrder());
 		normalBuffer = byteBuf.asFloatBuffer();
 		for(int i=0; i<vnPointer.size(); i++){
@@ -40,10 +40,10 @@ public class TDModelPart {
 		normalBuffer.position(0);
 		
 
-		ByteBuffer fBuf = ByteBuffer.allocateDirect(faces.size() * BYTES_PER_SHORT);
+		ByteBuffer fBuf = ByteBuffer.allocateDirect(faces.size() * TypeSizes.BYTES_PER_INTEGER);
 		fBuf.order(ByteOrder.nativeOrder());
-		faceBuffer = fBuf.asShortBuffer();
-		faceBuffer.put(toPrimitiveArrayS(faces));
+		faceBuffer = fBuf.asIntBuffer();
+		faceBuffer.put(ArrayBufferConverter.getIntArrayFromIntVector(faces));
 		faceBuffer.position(0);
 	}
 	public String toString(){
@@ -57,20 +57,12 @@ public class TDModelPart {
 		str+="\nNumber of vtPointers:"+vtPointer.size();
 		return str;
 	}
-	public ShortBuffer getFaceBuffer(){
+	public IntBuffer getFaceBuffer(){
 		return faceBuffer;
 	}
 	public FloatBuffer getNormalBuffer(){
 		return normalBuffer;
-	}
-	private static short[] toPrimitiveArrayS(Vector<Short> vector){
-		int vectorSize = vector.size();
-		short[] s = new short[vectorSize];
-		for (int i=0; i<vectorSize; i++){
-			s[i]=vector.get(i); 
-		}
-		return s;
-	}
+	}	
 	public int getFacesCount(){
 		return faces.size();
 	}

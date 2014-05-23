@@ -17,7 +17,7 @@ public class OBJParser {
 
 	private static final String TAG = "OBJParser.java";
 	private static AssetManager assetMgr;
-	Vector<Short> faces = new Vector<Short>();
+	Vector<Integer> faces = new Vector<Integer>();
 	Vector<Short> vtPointer = new Vector<Short>();
 	Vector<Short> vnPointer = new Vector<Short>();
 	Vector<Float> v = new Vector<Float>();						//vertex coordinates
@@ -76,7 +76,7 @@ public class OBJParser {
 							/* Ha még nincs beolvasva, akkor kinullozzuk. */
 							m = null;
 						}
-						faces = new Vector<Short>();
+						faces = new Vector<Integer>();
 						vtPointer = new Vector<Short>();
 						vnPointer = new Vector<Short>();
 					} catch (Exception e) {
@@ -87,7 +87,7 @@ public class OBJParser {
 							line.split("[ ]+")[1]);
 					for (int i = 0; i < materials.size(); i++) {
 						Material mat = materials.get(i);
-						Log.v("materials", mat.toString());
+						Log.e("materials", mat.toString());
 					}
 				}
 			}
@@ -99,8 +99,8 @@ public class OBJParser {
 					vn);
 			parts.add(model);
 		}
-		Mesh mesh = new Mesh(context, v, vn, vt, parts); //Tibi's magic! Erre fogom cserélni az előző sort!
-		mesh.buildBuffers(); //Tibi's magic! Erre fogom cserélni az előző sort!
+		Mesh mesh = new Mesh(context, v, vn, vt, parts, faces, materials.get(0));
+		mesh.buildBuffers();
 		Log.d(TAG, mesh.toString());
 		
 		//return t;
@@ -138,19 +138,19 @@ public class OBJParser {
 		if (tokens[1].matches("[0-9]+")) {// f: v
 			if (c == 4) {// 3 faces
 				for (int i = 1; i < c; i++) {
-					Short s = Short.valueOf(tokens[i]);
-					s--;
-					faces.add(s);
+					Integer v = Integer.valueOf(tokens[i]);
+					v--;
+					faces.add(v);
 				}
 			} 
 		}
 		if (tokens[1].matches("[0-9]+/[0-9]+")) {// if: v/vt
 			if (c == 4) {// 3 faces
 				for (int i = 1; i < c; i++) {
-					Short s = Short.valueOf(tokens[i].split("/")[0]);
-					s--;
-					faces.add(s);
-					s = Short.valueOf(tokens[i].split("/")[1]);
+					Integer v = Integer.valueOf(tokens[i].split("/")[0]);
+					v--;
+					faces.add(v);
+					Short s = Short.valueOf(tokens[i].split("/")[1]);
 					s--;
 					vtPointer.add(s);
 				}
@@ -159,10 +159,10 @@ public class OBJParser {
 		if (tokens[1].matches("[0-9]+//[0-9]+")) {// f: v//vn
 			if (c == 4) {// 3 faces
 				for (int i = 1; i < c; i++) {
-					Short s = Short.valueOf(tokens[i].split("//")[0]);
-					s--;
-					faces.add(s);
-					s = Short.valueOf(tokens[i].split("//")[1]);
+					Integer v = Integer.valueOf(tokens[i].split("//")[0]);
+					v--;
+					faces.add(v);
+					Short s = Short.valueOf(tokens[i].split("//")[1]);
 					s--;
 					vnPointer.add(s);
 				}
@@ -172,10 +172,10 @@ public class OBJParser {
 
 			if (c == 4) {// 3 faces
 				for (int i = 1; i < c; i++) {
-					Short s = Short.valueOf(tokens[i].split("/")[0]);
-					s--;
-					faces.add(s);
-					s = Short.valueOf(tokens[i].split("/")[1]);
+					Integer v = Integer.valueOf(tokens[i].split("/")[0]);
+					v--;
+					faces.add(v);
+					Short s = Short.valueOf(tokens[i].split("/")[1]);
 					s--;
 					vtPointer.add(s);
 					s = Short.valueOf(tokens[i].split("/")[2]);
