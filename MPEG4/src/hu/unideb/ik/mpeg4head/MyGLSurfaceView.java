@@ -58,13 +58,13 @@ public class MyGLSurfaceView extends GLSurfaceView {
         // MotionEvent reports input details from the touch screen
         // and other input controls. In this case, you are only
         // interested in events where the touch position changed.
-    	Log.d(TAG, "onTouchEvent begin");
+    	//Log.d(TAG, "onTouchEvent begin");
         float x = e.getX();
         float y = e.getY();
 
         switch (e.getAction()) {
-            case MotionEvent.ACTION_MOVE:
-
+            /*case MotionEvent.ACTION_MOVE:
+            	
                 float dx = x - mPreviousX;
                 float dy = y - mPreviousY;
 
@@ -77,15 +77,44 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 if (x < getWidth() / 2) {
                     dy = dy * -1 ;
                 }
+                
 
                 mRenderer.setAngle(
                         mRenderer.getAngle() +
                         ((dx + dy) * TOUCH_SCALE_FACTOR));  // = 180.0f / 320
                 requestRender();
+                break;*/
+            case MotionEvent.ACTION_DOWN:
+            	if(( y < getHeight() / 3) && (x < getWidth() / 2 )){
+                	mRenderer.transX -= 1.0f;
+                	Log.d(TAG, "1. TransX--: " + mRenderer.transX);
+                }
+                else if(( y < getHeight() / 3) && (x > getWidth() / 2 )){
+                	mRenderer.transX += 1.0f;
+                	Log.d(TAG, "2. TransX++: " +  mRenderer.transX);
+                }
+                else if(( y > getHeight() / 3 *2) && (x < getWidth() / 2 )){
+                	mRenderer.transZ -= 1.0f;
+                	Log.d(TAG, "5.  TransZ-- " + mRenderer.transZ);
+                }
+                else if(( y > getHeight() / 3 * 2) && (x > getWidth() / 2 )){
+                	mRenderer.transZ += 1.0f;
+                	Log.d(TAG, "6. TransZ++: " + mRenderer.transZ);
+                }
+                else if(x < getWidth() / 2 ){
+                	mRenderer.transY -= 1.0f;
+                	Log.d(TAG, "3.  TransY-- " + mRenderer.transY);
+                }
+                else if(x > getWidth() / 2 ){
+                	mRenderer.transY += 1.0f;
+                	Log.d(TAG, "4. TransY++: " + mRenderer.transY);
+                }
+            	requestRender();
+            	break;
         }
         mPreviousX = x;
         mPreviousY = y;
-    	Log.d(TAG, "onTouchEvent finish");
+    	//Log.d(TAG, "onTouchEvent finish");
         return true;
     }
 

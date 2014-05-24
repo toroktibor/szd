@@ -44,8 +44,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 	private float[] mRotationMatrix = new float[16];
 	private float[] mScaleMatrix = new float[16];
 
-	private float scaleAmount = 2.0f;
-	private float mAngle;
+	private float scaleAmount = 0.8f;
+	private float mAngle = 0.0f;
 	private float theta;
 
 	private static final float[] AxisX = { 1.0f, 0.0f, 0.0f };
@@ -53,25 +53,25 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 	private static final float[] AxisZ = { 0.0f, 0.0f, 1.0f };
 
 	/* 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f */
-	private float eyeX = 0.0f;
-	private float eyeY = 0.0f;
-	private float eyeZ = -5.0f;
+	public float eyeX = 0.0f;
+	public float eyeY = 0.0f;
+	public float eyeZ = -3.0f;
 
 	private float ctrX = 0.0f;
 	private float ctrY = 0.0f;
-	private float ctrZ = 0.0f;
+	private float ctrZ = 20.0f;
 
 	private float upX = 0.0f;
 	private float upY = 1.0f;
 	private float upZ = 0.0f;
 
-	public float near = 2.0f;
+	public float near = 0.1f;
 	public float far = 200.0f;
 	private float ratio;
 
 	public float transX = 0.0f;
 	public float transY = 0.0f;
-	public float transZ = -0.0f;
+	public float transZ = -5.0f;
 
 	private float diffGravityX;
 	private float diffGravityY;
@@ -85,7 +85,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 	private float newGravityY;
 	private float newGravityZ;
 
-	private static final float epsilon = 0.5f;
+	private static final float epsilon = 0.45f;
 
 	private boolean newOrientation = true;
 
@@ -94,17 +94,45 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 		sensorMgr = (SensorManager) context
 				.getSystemService(Context.SENSOR_SERVICE);
 		gravity = sensorMgr.getDefaultSensor(Sensor.TYPE_GRAVITY);
-
+		OBJParser parser = new OBJParser(context);
+		String modelname = "texture_face_final_meshlab.obj";
+		// String modelname = "dragon.obj";
+		mesh = parser.parseOBJ(modelname);
+		Log.d(TAG, "loaded the modell '" + modelname + "'");
+		// Log.e(TAG, mesh.toString());
 	}
 
 	public void makeModelMatrix() {
+		Matrix.setIdentityM(mScaleMatrix, 0);
+		Matrix.setIdentityM(mRotationMatrix, 0);
+		Matrix.setIdentityM(mTranslateMatrix, 0);
+		Matrix.setIdentityM(tempMatrix, 0);
+		
+		Matrix.scaleM(mScaleMatrix, 0, scaleAmount, scaleAmount, scaleAmount);
+		Matrix.rotateM(mRotationMatrix, 0, theta, AxisY[0], AxisY[1], AxisY[2]);
+		Matrix.translateM(mTranslateMatrix, 0, transX, transY, transZ);
+		
 		Matrix.multiplyMM(tempMatrix, 0, mRotationMatrix, 0, mScaleMatrix, 0);
 		Matrix.multiplyMM(mModelMatrix, 0, mTranslateMatrix, 0, tempMatrix, 0);
 	}
+	
+	public void makeModelMatrix2() {
+		Matrix.setIdentityM(mScaleMatrix, 0);
+		Matrix.setIdentityM(mRotationMatrix, 0);
+		Matrix.setIdentityM(mTranslateMatrix, 0);
+		Matrix.setIdentityM(tempMatrix, 0);
+		
+		Matrix.scaleM(mScaleMatrix, 0, scaleAmount, scaleAmount, scaleAmount);
+		//Matrix.rotateM(mRotationMatrix, 0, theta, AxisY[0], AxisY[1], AxisY[2]);
+		Matrix.translateM(mTranslateMatrix, 0, transX, transY, transZ);
+		
+		Matrix.multiplyMM(tempMatrix, 0, mRotationMatrix, 0, mTranslateMatrix, 0);
+		Matrix.multiplyMM(mModelMatrix, 0,mScaleMatrix, 0 , tempMatrix, 0);
+	}
 
 	public void makeMVPMatrix() {
-		Matrix.multiplyMM(tempMatrix, 0, mViewMatrix, 0, mProjectionMatrix, 0);
-		Matrix.multiplyMM(mMVPMatrix, 0, mModelMatrix, 0, tempMatrix, 0);
+		Matrix.multiplyMM(tempMatrix, 0, mViewMatrix, 0, mModelMatrix, 0);
+		Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, tempMatrix, 0);
 	}
 
 	@Override
@@ -112,7 +140,11 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 
 		//Log.d(TAG, "onSurfaceCreated begin");
 		// Set the background frame color
+		
+		GLES20.glEnable(GL10.GL_TEXTURE_2D);			//Enable Texture Mapping ( NEW )
+		GLES20.glEnable(GL10.GL_DEPTH_TEST); 			//Enables Depth Testing
 		GLES20.glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+		
 
 		theta = 0.0f;
 		scaleAmount = 1.0f;
@@ -129,7 +161,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 
 		eyeX = 0.0f;
 		eyeY = 0.0f;
-		eyeZ = 1.0f;
+		eyeZ = -2.0f;
 		ctrX = 0.0f;
 		ctrY = 0.0f;
 		ctrZ = 0.0f;
@@ -137,49 +169,31 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 		upY = 1.0f;
 		upZ = 0.0f;
 		//Log.d(TAG, "onSurfaceCreated - identify matrices, set primitive values");
-		Matrix.frustumM(mProjectionMatrix, 0, -1.0f, 1.0f, -1.0f, 1.0f, 0.01f,
-				100.0f);
+		//Matrix.frustumM(mProjectionMatrix, 0, -1.0f, 1.0f, -1.0f, 1.0f, 0.01f, 100.0f);
+		Matrix.frustumM(mProjectionMatrix, 0, -5, 5, -5, 5, near, far);
 		Matrix.setLookAtM(mViewMatrix, 0, eyeX, eyeY, eyeZ, ctrX, ctrY, ctrZ,
 				upX, upY, upZ);
-		Matrix.scaleM(mScaleMatrix, 0, scaleAmount, scaleAmount, scaleAmount);
-		//Log.d(TAG, "onSurfaceCreated - frustrum, setLookAt, scaleM matrices");
 
-		float[] yAxis = { 0.0f, 1.0f, 0.0f };
-
-		/* Now we are only rotating around Y axis..... */
-		Matrix.rotateM(mRotationMatrix, 0, theta, yAxis[0], yAxis[1], yAxis[2]);
-		Matrix.translateM(mTranslateMatrix, 0, transX, transY, transZ);
-		//Log.d(TAG, "onSurfaceCreated - rotateM, translate matrices");
-
-		makeModelMatrix();
-		makeMVPMatrix();
 		//Log.d(TAG, "onSurfaceCreated - makeModelMatrix, makeMVPMatrix");
-
-		OBJParser parser = new OBJParser(context);
-		String modelname = "texture_face_final_meshlab.obj";
-		// String modelname = "dragon.obj";
-		mesh = parser.parseOBJ(modelname);
-		Log.d(TAG, "loaded the modell '" + modelname + "'");
-		// Log.e(TAG, mesh.toString());
 	}
 
 	@Override
 	public void onDrawFrame(GL10 unused) {
-		Log.d(TAG, "onDrawFrame begin");
+		//Log.d(TAG, "onDrawFrame begin");
 
 		// Draw background color
 		GLES20.glClear(GLES20.GL_COLOR_BUFFER_BIT | GLES20.GL_DEPTH_BUFFER_BIT);
 		//Log.d(TAG, "onDrawFrame - glClear");
 
 		// Set the camera position (View matrix)
-		Matrix.setLookAtM(mViewMatrix, 0, 0, 0, -3, 0f, 0f, 0f, 0f, 1.0f, 0.0f);
+		Matrix.setLookAtM(mViewMatrix, 0, eyeX, eyeY, eyeZ, ctrX, ctrY, ctrZ, upX, upY, upZ);
 		//Log.d(TAG, "onDrawFrame - setLookAtM");
 
 		// Create a rotation for the triangle
-		long time = SystemClock.uptimeMillis() % 4000L;
-		mAngle = 0.090f * ((int) time);
-		Log.d(TAG, "onDrawFrame - processed rotating angle:" + mAngle);
-		Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
+		//long time = SystemClock.uptimeMillis() % 4000L;
+		//mAngle = 0.090f * ((int) time);
+		//Log.d(TAG, "onDrawFrame - processed rotating angle:" + mAngle);
+		//Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
 		//Log.d(TAG, "onDrawFrame - setRotateM");
 
 		// Calculate the modified Model and MVP matrix
@@ -190,9 +204,16 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 		/*for(int i = 0; i < 16; ++i) {
 			Log.d("MVP["+i+"]", " " + mMVPMatrix[i] );
 		}*/
+		
+		//Log.d("TESTVERTEXVALUES", "COM'ON! :)");
+		float[] res = new float[4];
+		float[] raw = { mesh.v.get(0), mesh.v.get(1), mesh.v.get(2), 0.0f};
+		Matrix.multiplyMV(res, 0, mMVPMatrix, 0, raw, 0);
+		Log.d(TAG, "x: " + res[0] + " y: " + res[1] + " z: " + res[2]);
+		
 		mesh.draw(unused, mMVPMatrix);
-		Log.d(TAG, "mesh.draw()");
-		Log.d(TAG, "onDrawFrame finish");
+		//Log.d(TAG, "mesh.draw()");
+		//Log.d(TAG, "onDrawFrame finish");
 	}
 
 	@Override
@@ -206,7 +227,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 
 		// this projection matrix is applied to object coordinates
 		// in the onDrawFrame() method
-		Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, 3, 7);
+		//Matrix.frustumM(mProjectionMatrix, 0, -ratio, ratio, -1, 1, near, far);
+		Matrix.frustumM(mProjectionMatrix, 0, -20, 20, -20, 20, near, far);
 		//Log.d(TAG, "onSurfaceChaned - frustrumM");
 		//Log.d(TAG, "onSurfaceChaned finish");
 

@@ -28,6 +28,9 @@ public class Mesh {
 	/* Number of coordinates per vertex. */
 	private static final int COORDS_PER_VERTEX = 3;
 	private static final int COORDS_PER_TEXCOORDS = 2;
+	private static final int STRIDE_OF_ATTRIBS = 5 * TypeSizes.BYTES_PER_FLOAT;
+	private static final int VERTEX_OFFSET = 0;
+	private static final int TEXCOORD_OFFSET = COORDS_PER_VERTEX * TypeSizes.BYTES_PER_FLOAT;
 	private static final String TAG = "Mesh";
 	
 	
@@ -55,14 +58,107 @@ public class Mesh {
 	Vector<Float> vn;
 	Vector<Float> vt;
 	Vector<Integer> faces;
-	Vector<TDModelPart> parts;
+	Vector<Short> vtPointer;
+	
 	FloatBuffer vertexBuffer;
 	FloatBuffer texcoordsBuffer;
+	FloatBuffer vboBuffer;
 	IntBuffer indexBuffer;
 	
 	private int[] textures = new int[1];
 	private int indicesHandle;
+	private int[] vbo = new int[1];
 
+	public Mesh(Context ctx, Vector<Float> v, Vector<Float> vt, Vector<Integer> faces, Vector<Short> vtPointer, Material mat) {
+		super();
+		context = ctx;	
+		mgr = context.getAssets();
+		this.v = v;
+		this.vt = vt;
+		this.faces = faces;
+		this.vtPointer = vtPointer;
+		this.myMaterial = mat;
+
+		GLES20.glGenBuffers(1, vbo, 0);
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo[0]);
+		//buildDifferentBuffers();
+		//buildOneBuffer();
+		buildOneInterleavedBuffer();
+		prepareShaders("vertexShaderNew.vsh", "fragmentShaderNew.fsh");
+		prepareHandles();
+		prepareAttributes();
+	}
+
+	public void buildDifferentBuffers(){
+		ByteBuffer vBuf = ByteBuffer.allocateDirect(v.size() * TypeSizes.BYTES_PER_FLOAT);
+		vBuf.order(ByteOrder.nativeOrder());
+		vertexBuffer = vBuf.asFloatBuffer();
+		vertexBuffer.put(ArrayBufferConverter.getFloatArrayFromFloatVector(v));
+		vertexBuffer.position(0);
+		
+		ByteBuffer tcBuf = ByteBuffer.allocateDirect(vt.size() * TypeSizes.BYTES_PER_FLOAT);
+		tcBuf.order(ByteOrder.nativeOrder());
+		texcoordsBuffer = tcBuf.asFloatBuffer();
+		texcoordsBuffer.put(ArrayBufferConverter.getFloatArrayFromFloatVector(vt));
+		texcoordsBuffer.position(0);
+		
+		ByteBuffer idxBuf = ByteBuffer.allocateDirect(faces.size() * TypeSizes.BYTES_PER_INTEGER);
+		idxBuf.order(ByteOrder.nativeOrder());
+		indexBuffer = idxBuf.asIntBuffer();
+		indexBuffer.put(ArrayBufferConverter.getIntArrayFromIntVector(faces));
+		indexBuffer.position(0);
+	}
+	
+	public void buildOneBuffer() {
+		ByteBuffer vAndVtBuf = 
+				ByteBuffer.allocateDirect(	v.size() * TypeSizes.BYTES_PER_FLOAT +
+											vt.size() * TypeSizes.BYTES_PER_FLOAT);
+		vAndVtBuf.order(ByteOrder.nativeOrder());									//csak egy nagy buffert készítünk
+		vboBuffer = vAndVtBuf.asFloatBuffer();
+		vboBuffer.put(ArrayBufferConverter.getFloatArrayFromFloatVector(v));		//beletöltjük először a vertex koodrinátákat
+		vboBuffer.put(ArrayBufferConverter.getFloatArrayFromFloatVector(vt));		//aztán a textúra koordinátákat
+		vboBuffer.position(0);
+	}
+	
+	public void buildOneInterleavedBuffer() {
+		/* bufferItems-ben tároljuk az indexek számát.
+		 * a buffer lefoglalásához szükség van arra, hogy ezt felszorozzuk
+		 * annyival, amennyi byte információ van egy vertexről.
+		 * ez magában foglalja a 3 floatot, az x, y és z vertex koordinátákat
+		 * továbbá 2 floatot, az u és v textúra koordinátákat
+		 * */
+		final int bufferItems = faces.size();		
+		Log.d("buildOneInterleavedBuffer", "faces.size()=" + faces.size());
+		
+		final int bufferSize = bufferItems * (COORDS_PER_TEXCOORDS + COORDS_PER_VERTEX) * TypeSizes.BYTES_PER_FLOAT;
+		Log.d("buildOneInterleavedBuffer", "Összesen ennyi bájtot foglalunk le: " + bufferSize);
+		
+		ByteBuffer vAndVtBuf = 	ByteBuffer.allocateDirect(	bufferSize);
+		vAndVtBuf.order(ByteOrder.nativeOrder());
+		vboBuffer = vAndVtBuf.asFloatBuffer();
+		float[] temp1 = ArrayBufferConverter.getFloatArrayFromFloatVector(v);
+		float[] temp2 = ArrayBufferConverter.getFloatArrayFromFloatVector(vt);
+		//Log.d(TAG, "1. érték: " + temp1[faces.get(0)]);
+		int actualVertexIndex;
+		int actualTexcoordIndex;
+		for(int i = 0; i < bufferItems / 3; ++i) {
+			actualVertexIndex = i * COORDS_PER_VERTEX;
+			Log.d(TAG, "actualVertexIndex=" + actualVertexIndex);
+			vboBuffer.put(temp1[faces.get(actualVertexIndex)]);
+			Log.d(TAG, "actualVertexIndex=" + (actualVertexIndex+1));
+			vboBuffer.put(temp1[faces.get(actualVertexIndex+1)]);
+			Log.d(TAG, "actualVertexIndex=" + (actualVertexIndex+2));
+			vboBuffer.put(temp1[faces.get(actualVertexIndex+2)]);
+			
+			actualTexcoordIndex = i * COORDS_PER_TEXCOORDS;
+			Log.d(TAG, "actualTexcoordIndex=" + actualTexcoordIndex);
+			vboBuffer.put(temp2[vtPointer.get(actualTexcoordIndex)]);
+			Log.d(TAG, "actualTexcoordIndex=" + (actualTexcoordIndex+1));
+			vboBuffer.put(temp2[vtPointer.get(actualTexcoordIndex+1)]);			
+		}
+	
+	}
+	
 	private String readShaderCodeFromFile(String fileName) {
 		String line = null;
 		BufferedReader reader = null;
@@ -81,10 +177,10 @@ public class Mesh {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-		Log.d("readShaderCodeFromFile", sb.toString());
+		//Log.d("readShaderCodeFromFile", sb.toString());
 		return sb.toString();
 	}
-
+	
 	public static int loadShader(int type, String shaderCode){
 
 	    // create a vertex shader type (GLES20.GL_VERTEX_SHADER)
@@ -94,31 +190,13 @@ public class Mesh {
 	    // add the source code to the shader and compile it
 	    GLES20.glShaderSource(shader, shaderCode);
 	    GLES20.glCompileShader(shader);
-	    Log.d("loadShader", "finishing");
+	    //Log.d("loadShader", "finishing");
 	    return shader;
 	}
 	
-	private void getAllHandles() {
-		a_PositionHandle = GLES20.glGetAttribLocation(mProgram, "a_Position");
-		a_TexCoordinateHandle = GLES20.glGetAttribLocation(mProgram, "a_TexCoordinate");
-		u_MVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "u_MVPMatrix");
-		GLES20.glGetUniformLocation(mProgram, "u_MVPMatrix");
-	}
-	
-	public Mesh(Context ctx, Vector<Float> v, Vector<Float> vn, Vector<Float> vt,
-			Vector<TDModelPart> parts, Vector<Integer> faces, Material mat) {
-		super();
-		context = ctx;	
-		mgr = context.getAssets();
-		this.v = v;
-		this.vn = vn;
-		this.vt = vt;
-		this.faces = faces;
-		this.parts = parts;
-		this.myMaterial = mat;
-		
-		vertexShaderCode = readShaderCodeFromFile("vertexShaderNew.vsh");
-		fragmentShaderCode = readShaderCodeFromFile("fragmentShaderNew.fsh");
+	private void prepareShaders(String vshFile, String fshFile) {
+		vertexShaderCode = readShaderCodeFromFile(vshFile);
+		fragmentShaderCode = readShaderCodeFromFile(fshFile);
 		
 		vertexShaderHandle = loadShader(GLES20.GL_VERTEX_SHADER, vertexShaderCode);
 		fragmentShaderHandle = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
@@ -127,52 +205,49 @@ public class Mesh {
 		GLES20.glAttachShader(mProgram, vertexShaderHandle);
 		GLES20.glAttachShader(mProgram, fragmentShaderHandle);
 		GLES20.glLinkProgram(mProgram);
-		getAllHandles();
+	}
+	
+	private void prepareHandles() {
+		a_PositionHandle = GLES20.glGetAttribLocation(mProgram, "a_Position");
+		a_TexCoordinateHandle = GLES20.glGetAttribLocation(mProgram, "a_TexCoordinate");
+		u_MVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "u_MVPMatrix");
+	}
+	
+	private void prepareAttributes() {
 		
-	}
-	
-	
-	public void draw(GL10 gl, float[] mMVP) {
-		GLES20.glUseProgram(mProgram);
-		Log.d(TAG, "useProgram");
+		GLES20.glBufferData(	
+				GLES20.GL_ARRAY_BUFFER, 
+				(COORDS_PER_VERTEX + COORDS_PER_TEXCOORDS ) * TypeSizes.BYTES_PER_FLOAT,
+				vboBuffer,
+				GLES20.GL_STATIC_DRAW);
+		
+		GLES20.glVertexAttribPointer(	
+				a_PositionHandle,		
+				COORDS_PER_VERTEX,
+				GLES20.GL_FLOAT, 
+				false, 
+				STRIDE_OF_ATTRIBS, 
+				VERTEX_OFFSET);
+		
+		GLES20.glVertexAttribPointer(	
+				a_TexCoordinateHandle,		
+				COORDS_PER_TEXCOORDS,
+				GLES20.GL_FLOAT, 
+				false, 
+				STRIDE_OF_ATTRIBS, 
+				TEXCOORD_OFFSET);
 		GLES20.glEnableVertexAttribArray(a_PositionHandle);
-	    GLES20.glVertexAttribPointer(a_PositionHandle, COORDS_PER_VERTEX, GLES20.GL_FLOAT, false, 0, vertexBuffer);
-	    Log.d(TAG, "vertex[] -> a_Position buffer");
-	    GLES20.glEnableVertexAttribArray(a_TexCoordinateHandle);
-	    GLES20.glVertexAttribPointer(a_TexCoordinateHandle, COORDS_PER_TEXCOORDS, GLES20.GL_FLOAT, false, 0, texcoordsBuffer);
-	    Log.d(TAG, "texcoord[] -> a_TexCoordinate buffer");
-		GLES20.glUniformMatrix4fv(u_MVPMatrixHandle, 1, false, mMVP, 0);
-		Log.d(TAG, "getUniform MVP");
-		/* TEXTÚRA BETÖLTÉSE ÉS ÁDATÁSA A UNIFORM-NAK!!!!!!! */ 
-		/* NE FELEJTSEM EL ÁTÍRNI A FRAGMENT SHADERT KONSTANS SZÍNRŐL TEXTÚRA KEZELÉSÉRE!!!!!!!!!!!!!!!! */
-		/*loadTextureFromAssets(gl);
-		// Set the active texture unit to texture unit 0.
-		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-
-		// Bind the texture to this unit.
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
-
-		// Tell the texture uniform sampler to use this texture in the shader by binding to texture unit 0.
-		GLES20.glUniform1i(u_TextureSamplerHandle, 0); 
-		*/
-		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, a_PositionHandle);
-		Log.d(TAG, "bindBuffer a_Position");
-		GLES20.glGenBuffers(indicesHandle, indexBuffer);
-		Log.d(TAG, "genBuffer ELEMENTS");
-		GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, indicesHandle);
-		Log.d(TAG, "indices[] -> GL_ELEMENT_ARRAY");
-
-		GLES20.glDrawElements(GLES20.GL_TRIANGLES, faces.size(), GLES20.GL_INT, indexBuffer); 
-		Log.d(TAG, "DrawElements...");
-	    //GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, v.size());
+		GLES20.glEnableVertexAttribArray(a_TexCoordinateHandle);		
 	}
-	
+
 	public void loadTextureFromAssets(GL10 gl) {
 		//Get the texture from the Android resource directory
 		
 		InputStream is = null;
 		try {
-			is = mgr.open(myMaterial.getTextureFile());
+			String textureFileName = myMaterial.getTextureFile();
+			is = mgr.open(textureFileName);
+			Log.e(TAG, "Loading texture file: " + textureFileName);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -211,27 +286,24 @@ public class Mesh {
 		//Clean up
 		bitmap.recycle();
 	}
-	
-	public void buildBuffers(){
-		ByteBuffer vBuf = ByteBuffer.allocateDirect(v.size() * TypeSizes.BYTES_PER_FLOAT);
-		vBuf.order(ByteOrder.nativeOrder());
-		vertexBuffer = vBuf.asFloatBuffer();
-		vertexBuffer.put(ArrayBufferConverter.getFloatArrayFromFloatVector(v));
-		vertexBuffer.position(0);
-		
-		ByteBuffer tcBuf = ByteBuffer.allocateDirect(vt.size() * TypeSizes.BYTES_PER_FLOAT);
-		tcBuf.order(ByteOrder.nativeOrder());
-		texcoordsBuffer = tcBuf.asFloatBuffer();
-		texcoordsBuffer.put(ArrayBufferConverter.getFloatArrayFromFloatVector(vt));
-		texcoordsBuffer.position(0);
-		
-		ByteBuffer idxBuf = ByteBuffer.allocateDirect(faces.size() * TypeSizes.BYTES_PER_INTEGER);
-		idxBuf.order(ByteOrder.nativeOrder());
-		indexBuffer = idxBuf.asIntBuffer();
-		indexBuffer.put(ArrayBufferConverter.getIntArrayFromIntVector(faces));
-		indexBuffer.position(0);
-	}
 
+	public void draw(GL10 gl, float[] mMVP) {
+		GLES20.glUseProgram(mProgram);
+		/* Itt a nagy magic. A híres neves "Interleaved VBO" technika. */
+		
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo[0]);
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, textures[0]);
+		GLES20.glUniform4fv(u_MVPMatrixHandle, 1, mMVP, 0);
+		/*GLES20.glGenBuffers(indicesHandle, indexBuffer);
+		Log.d(TAG, "genBuffer ELEMENTS");
+		GLES20.glBindBuffer(GLES20.GL_ELEMENT_ARRAY_BUFFER, indicesHandle);
+		Log.d(TAG, "indices[] -> GL_ELEMENT_ARRAY");
+
+		GLES20.glDrawElements(GLES20.GL_TRIANGLES, faces.size(), GLES20.GL_INT, indexBuffer); 
+		Log.d(TAG, "DrawElements...");
+	    */
+	    GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, faces.size()/3); //???
+	}
 	
 	public String toString(){
 		String str=new String();

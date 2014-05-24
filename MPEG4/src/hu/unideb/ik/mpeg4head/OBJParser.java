@@ -101,10 +101,12 @@ public class OBJParser {
 					vn);
 			parts.add(model);
 		}
+		Log.d(TAG, "v.size=" + v.size()); 
+		Log.d(TAG, "vtPointer.size()=" + vtPointer.size());
+		Log.d(TAG, "faces.size()=" + faces.size());
 		if(materials.size() != 0) {
-			Mesh mesh = new Mesh(context, v, vn, vt, parts, faces, materials.get(0));
-			mesh.buildBuffers();
-			Log.d(TAG, mesh.toString());
+			Mesh mesh = new Mesh(context, v, vt, faces, vtPointer, materials.get(0));
+			//Log.d(TAG, mesh.toString());
 			return mesh;
 		}
 		Log.d(TAG, "ERROR! No material file found with specified name(s)...");
