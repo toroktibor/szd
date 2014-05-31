@@ -43,8 +43,8 @@ public class MyGLSurfaceView extends GLSurfaceView {
         Log.d(TAG, "new MyGLRenderer(context)");
 
         setRenderer(mRenderer);
-        Log.d(TAG, "setRenderer(mRenderer);");
-        Log.d(TAG, "constructor finish");
+        //Log.d(TAG, "setRenderer(mRenderer);");
+        //Log.d(TAG, "constructor finish");
         // Render the view only when there is a change in the drawing data
         //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
@@ -108,7 +108,13 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 else if(x > getWidth() / 2 ){
                 	mRenderer.transY += 1.0f;
                 	Log.d(TAG, "4. TransY++: " + mRenderer.transY);
-                }
+                }/*
+            	if(y < getHeight() / 2) {
+            		mRenderer.scaleAmount += 0.5;
+            	}
+            	else if(y > getHeight() / 2) {
+            		mRenderer.scaleAmount -= 0.5;
+            	}*/
             	requestRender();
             	break;
         }

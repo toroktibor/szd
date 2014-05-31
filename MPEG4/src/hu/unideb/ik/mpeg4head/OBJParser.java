@@ -28,7 +28,7 @@ public class OBJParser {
 
 	public OBJParser(Context ctx) {
 		context = ctx;
-		assetMgr = ctx.getAssets();
+		assetMgr = context.getAssets();
 	}
 
 	public Mesh parseOBJ(String fileName) {
@@ -63,6 +63,7 @@ public class OBJParser {
 							/* ... az eddig beolvasott adatokból létrehozunk egy részmodellt. */
 							TDModelPart model = new TDModelPart(faces,
 									vtPointer, vnPointer, m, vn);
+							Log.e(TAG, "TDModelPart added!!!!!!!");
 							parts.add(model);
 						}
 						/* Kiolvassuk a fájl nevét. */
