@@ -14,8 +14,8 @@ import android.opengl.Matrix;
 import android.os.SystemClock;
 import android.util.Log;
 
-public class MyGLRenderer implements GLSurfaceView.Renderer,
-		SensorEventListener {
+public class MyGLRenderer implements GLSurfaceView.Renderer /*,
+		SensorEventListener*/ {
 
 	private static final String TAG = "MyGLRenderer";
 
@@ -39,7 +39,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 	private float[] mTranslateMatrix = new float[16];
 	private float[] mRotationMatrix = new float[16];
 	private float[] mScaleMatrix = new float[16];
-
+	
+	/* A háromszögnél 70 volt az ideális scaleAmount!!! */
 	public float scaleAmount = 70.0f;
 	private float mAngle = 0.0f;
 	private float theta;
@@ -50,6 +51,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 
 	public float eyeX = 0.0f;
 	public float eyeY = 0.0f;
+	/* TODO az eyeZ eredetileg -5 volt!!! */
 	public float eyeZ = -5.0f;
 
 	private float ctrX = 0.0f;
@@ -90,25 +92,36 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 				.getSystemService(Context.SENSOR_SERVICE);
 		gravity = sensorMgr.getDefaultSensor(Sensor.TYPE_GRAVITY);
 		
-		
-		objParser = new OBJParser(context);
 		modelname = "texture_face_final_meshlab.obj";
 		//modelname = "dragon.obj";
 	}
 
+	public static void logMatrix(String logtag, float[] m) {
+		Log.e("MyGLRenderer", "logMatrix()");
+		int j;
+		for(int i = 0; i < 4; ++i) {
+			j = i * 4;
+			Log.d(logtag + "[" + (j) + "-" + (j+3) + "]", m[j] + " "+ m[j+1] + " " + m[j+2] + " " +m[j+3]);
+		}
+	}
+	
 	public void makeModelMatrix() {
 		Matrix.setIdentityM(mScaleMatrix, 0);
+
 		Matrix.setIdentityM(mRotationMatrix, 0);
 		Matrix.setIdentityM(mTranslateMatrix, 0);
 		Matrix.setIdentityM(tempMatrix, 0);
 		
 		Matrix.scaleM(mScaleMatrix, 0, scaleAmount, scaleAmount, scaleAmount);
+		//logMatrix("mScaleMatrix", mScaleMatrix);
 		Matrix.rotateM(mRotationMatrix, 0, theta, AxisY[0], AxisY[1], AxisY[2]);
-		Log.e("TRANS", transX + " " + transY + " " + transZ);
+		//logMatrix("mRotationMatrix", mRotationMatrix);
+		//Log.e("TRANS", transX + " " + transY + " " + transZ);
 		Matrix.translateM(mTranslateMatrix, 0, transX, transY, transZ);
-		
+		//logMatrix("mTranslateMatrix", mTranslateMatrix);
 		Matrix.multiplyMM(tempMatrix, 0, mRotationMatrix, 0, mScaleMatrix, 0);
 		Matrix.multiplyMM(mModelMatrix, 0, mTranslateMatrix, 0, tempMatrix, 0);
+		//logMatrix("mModelMatrix", mModelMatrix);
 	}
 	
 	public void makeModelMatrix2() {
@@ -128,6 +141,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 	public void makeMVPMatrix() {
 		Matrix.multiplyMM(tempMatrix, 0, mViewMatrix, 0, mModelMatrix, 0);
 		Matrix.multiplyMM(mMVPMatrix, 0, mProjectionMatrix, 0, tempMatrix, 0);
+		//logMatrix("mMVPMatrix", mMVPMatrix);
 	}
 
 	@Override
@@ -152,8 +166,9 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 		/**FONTOS! ITT KELL A RAJZOLANDÓ OBJEKTUMOKAT PÉLDÁNYSÍTANI
 		 * ÉS BEOLVASNI A MESH ADATOKAT, AZ OPENGL ES RAJZOLÓ SZÁLON!!! */
 		//t = new Triangle();
-		//t2 = new Triangle2(context);
-		mesh = objParser.parseOBJ(modelname);
+		t2 = new Triangle2(context);
+		//objParser = new OBJParser(context);
+		//mesh = objParser.parseOBJ(modelname);
 	}
 
 	@Override
@@ -198,8 +213,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 		*/
 		
 		//t.draw(mMVPMatrix);
-		//t2.draw(mMVPMatrix);
-		mesh.draw(mMVPMatrix);
+		t2.draw(mMVPMatrix);
+		//mesh.draw(mMVPMatrix);
 
 		//Log.d(TAG, "onDrawFrame finish");
 	}
@@ -241,6 +256,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 		mAngle = angle;
 	}
 
+	/*
 	@Override
 	public void onAccuracyChanged(Sensor sensor, int accuracy) {
 		Log.d(TAG, "onSensorChanged accuracy = " + accuracy);
@@ -279,5 +295,5 @@ public class MyGLRenderer implements GLSurfaceView.Renderer,
 
 		Log.d(TAG, "onSensorChanged finish");
 	}
-
+	 */
 }

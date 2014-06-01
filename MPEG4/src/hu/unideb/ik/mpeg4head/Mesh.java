@@ -84,7 +84,7 @@ public class Mesh {
 		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo[0]);
 
 		buildOneInterleavedBuffer();
-		prepareShaders("vertexShaderNew.vsh", "fragmentShaderNew.fsh");
+		prepareShadersAndProgram("vertexShaderNew.vsh", "fragmentShaderNew.fsh");
 		prepareHandles();
 		prepareAttributes();
 		loadTextureFromAssets();
@@ -211,7 +211,7 @@ public class Mesh {
 		return shader;
 	}
 
-	private void prepareShaders(String vshFile, String fshFile) {
+	private void prepareShadersAndProgram(String vshFile, String fshFile) {
 		vertexShaderCode = readShaderCodeFromFile(vshFile);
 		fragmentShaderCode = readShaderCodeFromFile(fshFile);
 
@@ -219,17 +219,17 @@ public class Mesh {
 		fragmentShaderHandle = loadShader(GLES20.GL_FRAGMENT_SHADER, fragmentShaderCode);
 		
 		mProgram = GLES20.glCreateProgram();
-		MyGLRenderer.checkGlError("glCreateProgram");
+		//MyGLRenderer.checkGlError("glCreateProgram");
 		
 		GLES20.glAttachShader(mProgram, vertexShaderHandle);
-		MyGLRenderer.checkGlError("glAttachShader");
+		//MyGLRenderer.checkGlError("glAttachShader");
 		
 		GLES20.glAttachShader(mProgram, fragmentShaderHandle);
-		MyGLRenderer.checkGlError("glAttachShader");
+		//MyGLRenderer.checkGlError("glAttachShader");
 		
 		GLES20.glLinkProgram(mProgram);
 		
-		Log.e("glGetShaderInfoLog:", GLES20.glGetShaderInfoLog(fragmentShaderHandle));
+		//Log.e("glGetShaderInfoLog:", GLES20.glGetShaderInfoLog(fragmentShaderHandle));
 		/*
 		int[] params = new int[] { 100 };
 		GLES20.glGetProgramiv(mProgram, GLES20.GL_LINK_STATUS, params, 0);
@@ -242,8 +242,8 @@ public class Mesh {
 			Log.e(TAG, "BAJ VAN A LINKELÉSSEL!");
 			Log.e(TAG, "GLES20.GL_FALSE=" + GLES20.GL_FALSE);
 			Log.e(TAG, "params[0]=" + params[0]);
-		}
-		Log.e("glGetProgramInfo:", GLES20.glGetProgramInfoLog(mProgram));*/
+		}*/
+		Log.e("glGetProgramInfo:", GLES20.glGetProgramInfoLog(mProgram));
 	}
 
 	private void prepareHandles() {
@@ -351,6 +351,7 @@ public class Mesh {
 
 		// Use the Android GLUtils to specify a two-dimensional texture image
 		// from our bitmap
+		Log.e("Mesh", "Bitmag width × height = " + bitmap.getWidth() + " × " + bitmap.getHeight());
 		GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
 
 		// Clean up
@@ -379,7 +380,7 @@ public class Mesh {
 		GLES20.glUniformMatrix4fv(u_MVPMatrixHandle, 1, false, mMVP, 0);
 
 		/* Egy kis ellenőrzés.... */
-		//Matrix.multiplyMV(res, 0, mMVP, 0, temp, 0);
+		Matrix.multiplyMV(res, 0, mMVP, 0, temp, 0);
 		//Log.e("MVP * vertices[0]=", res[0] + " " + res[1] + " " + res[2]);
  		/* Ellenőrzés vége. */
 		
