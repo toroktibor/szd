@@ -25,7 +25,8 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 
 	private Mesh mesh;
 	private Triangle t;
-	private Triangle2 t2;
+	private TriangleShaderLoaded tX1;
+	private TriangleTextured t2;
 	
 	private Sensor gravity;
 	private SensorManager sensorMgr;
@@ -40,8 +41,9 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 	private float[] mRotationMatrix = new float[16];
 	private float[] mScaleMatrix = new float[16];
 	
-	/* A háromszögnél 70 volt az ideális scaleAmount!!! */
-	public float scaleAmount = 70.0f;
+	/* A Triangle háromszögnél 5 volt az ideális scaleAmount!!!
+	 * máshol 70... */
+	public float scaleAmount = 5.0f;
 	private float mAngle = 0.0f;
 	private float theta;
 
@@ -166,9 +168,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 		/**FONTOS! ITT KELL A RAJZOLANDÓ OBJEKTUMOKAT PÉLDÁNYSÍTANI
 		 * ÉS BEOLVASNI A MESH ADATOKAT, AZ OPENGL ES RAJZOLÓ SZÁLON!!! */
 		//t = new Triangle();
-		t2 = new Triangle2(context);
-		//objParser = new OBJParser(context);
-		//mesh = objParser.parseOBJ(modelname);
+		//tX1 = new TriangleShaderLoaded(context);
+		//t2 = new TriangleTextured(context);
+		objParser = new OBJParser(context);
+		mesh = objParser.parseOBJ(modelname);
 	}
 
 	@Override
@@ -213,8 +216,9 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 		*/
 		
 		//t.draw(mMVPMatrix);
-		t2.draw(mMVPMatrix);
-		//mesh.draw(mMVPMatrix);
+		//tX1.draw(mMVPMatrix);
+		//t2.draw(mMVPMatrix);
+		mesh.draw(mMVPMatrix);
 
 		//Log.d(TAG, "onDrawFrame finish");
 	}

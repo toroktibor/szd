@@ -20,6 +20,8 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
 import android.opengl.GLES20;
+import android.opengl.Matrix;
+import android.util.Log;
 
 /**
  * A two-dimensional triangle for use as a drawn object in OpenGL ES 2.0.
@@ -80,6 +82,17 @@ public class Triangle {
 
     }
 
+    float[] tester = new float[4];
+    float[] testresult = new float[4];
+    
+    private void logDrawnVertexCoordinates(float[] mvpMatrix) {
+		for(int i = 0; i < 3; ++i)
+				tester[i] = triangleCoords[i];
+		tester[3] = 1.0f;
+		Matrix.multiplyMV(testresult, 0, mvpMatrix, 0, tester, 0);
+		Log.e("Triangle.draw() testvalues:", testresult[0] + "   " + testresult[1] + "   " +testresult[2] + "   " + testresult[3]);
+	}
+    
     public void draw(float[] mvpMatrix) {
         GLES20.glUseProgram(mProgram);
 
@@ -98,6 +111,8 @@ public class Triangle {
         GLES20.glUniformMatrix4fv(mMVPMatrixHandle, 1, false, mvpMatrix, 0);
         MyGLRenderer.checkGlError("glUniformMatrix4fv");
 
+        //logDrawnVertexCoordinates(mvpMatrix);
+        
         // Draw the triangle
         GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, vertexCount);
 

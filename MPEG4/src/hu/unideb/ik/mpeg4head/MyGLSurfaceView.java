@@ -93,21 +93,23 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 	mRenderer.transX += 1.0f;
                 	Log.d(TAG, "2. TransX++: " +  mRenderer.transX);
                 }
-                else if(( y > getHeight() / 3 *2) && (x < getWidth() / 2 )){
-                	mRenderer.transZ -= 1.0f;
-                	Log.d(TAG, "5.  TransZ-- " + mRenderer.transZ);
-                }
-                else if(( y > getHeight() / 3 * 2) && (x > getWidth() / 2 )){
-                	mRenderer.transZ += 1.0f;
-                	Log.d(TAG, "6. TransZ++: " + mRenderer.transZ);
-                }
-                else if(x < getWidth() / 2 ){
+                else if(( y < getHeight() / 3 *2) && (x < getWidth() / 2 )){
                 	mRenderer.transY -= 1.0f;
                 	Log.d(TAG, "3.  TransY-- " + mRenderer.transY);
                 }
-                else if(x > getWidth() / 2 ){
+                else if(( y < getHeight() / 3 * 2) && (x > getWidth() / 2 )){
                 	mRenderer.transY += 1.0f;
                 	Log.d(TAG, "4. TransY++: " + mRenderer.transY);
+                }
+                else if(x < getWidth() / 2 ){
+                	mRenderer.transZ -= 1.0f;
+                	Log.d(TAG, "5.  TransZ-- " + mRenderer.transZ);
+                	
+                }
+                else if(x > getWidth() / 2 ){
+                	mRenderer.transZ += 1.0f;
+                	Log.d(TAG, "6. TransZ++: " + mRenderer.transZ);
+                	
                 }/*
             	if(y < getHeight() / 2) {
             		mRenderer.scaleAmount += 0.5;

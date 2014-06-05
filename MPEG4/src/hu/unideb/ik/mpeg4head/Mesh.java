@@ -9,6 +9,8 @@ import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 import java.util.Vector;
 
+import com.example.android.opengl.R;
+
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
@@ -86,7 +88,6 @@ public class Mesh {
 		buildOneInterleavedBuffer();
 		prepareShadersAndProgram("vertexShaderNew.vsh", "fragmentShaderNew.fsh");
 		prepareHandles();
-		prepareAttributes();
 		loadTextureFromAssets();
 	}
 
@@ -126,7 +127,7 @@ public class Mesh {
 		vboBuffer.position(0);
 	}
 */
-
+	// MŰKÖDIK!!!
 	public void buildOneInterleavedBuffer() {
 		/*
 		 * bufferItems-ben tároljuk az indexek számát. a buffer lefoglalásához
@@ -170,10 +171,10 @@ public class Mesh {
 		Log.d(TAG, "Loading vboBuffer finished.");
 		vboBuffer.position(0);
 		temp[0] = vboBuffer.get(); temp[1] = vboBuffer.get();
-		temp[2] = vboBuffer.get();	temp[3] = 0.0f;
+		temp[2] = vboBuffer.get();	temp[3] = 1.0f;
 		vboBuffer.position(0);
 	}
-
+	// JÓL MŰKÖDIK!!!
 	private String readShaderCodeFromFile(String fileName) {
 		String line = null;
 		BufferedReader reader = null;
@@ -197,7 +198,7 @@ public class Mesh {
 		//Log.d("readShaderCodeFromFile", sb.toString());
 		return sb.toString();
 	}
-
+	// JÓL MŰKÖDIK!!!
 	public static int loadShader(int type, String shaderCode) {
 
 		int shader = GLES20.glCreateShader(type);
@@ -210,7 +211,7 @@ public class Mesh {
 		
 		return shader;
 	}
-
+	//JÓL MŰKÖDIK!!!
 	private void prepareShadersAndProgram(String vshFile, String fshFile) {
 		vertexShaderCode = readShaderCodeFromFile(vshFile);
 		fragmentShaderCode = readShaderCodeFromFile(fshFile);
@@ -245,7 +246,7 @@ public class Mesh {
 		}*/
 		Log.e("glGetProgramInfo:", GLES20.glGetProgramInfoLog(mProgram));
 	}
-
+	// JÓL MŰKÖDIK!!!
 	private void prepareHandles() {
 		/*if( GLES20.glIsProgram(mProgram) != true) {
 			Log.e(TAG, "Ez a program nem program! Hiba történt-->" + GLES20.glIsProgram(mProgram));
@@ -258,7 +259,7 @@ public class Mesh {
 		u_MVPMatrixHandle = GLES20.glGetUniformLocation(mProgram, "u_MVPMatrix");
 		u_TextureSamplerHandle = GLES20.glGetUniformLocation(mProgram, "u_TextureSampler");
 	}
-
+	// FONTOS! MINDEN DRAW-BAN MEG KELL HÍVNI, KÜLÖNBEN NEM FOGUNK LÁTNI LÓSZERSZÁMOT SEM!!!
 	private void prepareAttributes() {
 
 /*		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER,
@@ -273,8 +274,8 @@ public class Mesh {
 				COORDS_PER_TEXCOORDS, GLES20.GL_FLOAT, false,
 				STRIDE_OF_ATTRIBS, TEXCOORD_OFFSET);
 */
-		GLES20.glUseProgram(mProgram);
-		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo[0]);
+		//GLES20.glUseProgram(mProgram);
+		//GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo[0]);
 		/*
 		vboBuffer.position(0);
 		for(int i = 0; i < 100;++i) {
@@ -283,38 +284,37 @@ public class Mesh {
 		}*/
 		
 		vboBuffer.position(0);
+		GLES20.glEnableVertexAttribArray(a_PositionHandle);	
 		GLES20.glVertexAttribPointer(a_PositionHandle, 
 									COORDS_PER_VERTEX, 
 									GLES20.GL_FLOAT, 
 									false, 
 									STRIDE_OF_ATTRIBS, 
 									vboBuffer);
-		GLES20.glEnableVertexAttribArray(a_PositionHandle);		
+	
 		
 		vboBuffer.position(COORDS_PER_VERTEX);
+		GLES20.glEnableVertexAttribArray(a_TexCoordinateHandle);
 		GLES20.glVertexAttribPointer(a_TexCoordinateHandle, 
 									COORDS_PER_TEXCOORDS, 
 									GLES20.GL_FLOAT, 
 									false, 
 									STRIDE_OF_ATTRIBS, 
 									vboBuffer);
-		GLES20.glEnableVertexAttribArray(a_TexCoordinateHandle);
+
 	}
 
 	public void loadTextureFromAssets() {
-		// Get the texture from the Android resource directory
-
+		
 		InputStream is = null;
 		try {
 			String textureFileName = myMaterial.getTextureFile();
 			is = mgr.open(textureFileName);
-			Log.e(TAG, "Loading texture file: " + textureFileName);
+			//Log.e(TAG, "Loading texture file: " + textureFileName);
 		} catch (IOException e1) {
-			// TODO Auto-generated catch block
 			e1.printStackTrace();
 		}
-		// InputStream is =
-		// context.getResources().openRawResource(R.drawable.face_texture);
+		/*InputStream is = context.getResources().openRawResource(R.drawable.ic_launcher);*/
 		Bitmap bitmap = null;
 		try {
 			// BitmapFactory is an Android graphics utility for images
@@ -333,6 +333,7 @@ public class Mesh {
 		GLES20.glGenTextures(1, textures, 0);
 		u_TextureSamplerHandle = textures[0];
 		// ...and bind it to our array
+		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
 		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, u_TextureSamplerHandle);
 		
 		GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
@@ -360,28 +361,16 @@ public class Mesh {
 
 	public void draw(float[] mMVP) {
 		GLES20.glUseProgram(mProgram);
-		/*if(	(a_PositionHandle == -1) || 
-			(a_TexCoordinateHandle == -1) || 
-			(u_MVPMatrixHandle == -1) ||
-			(u_TextureSamplerHandle == -1)) {
-			Log.e(TAG, "Attribute vagy Uniform nem lett helyesen megtalálva a shaderprogramban!!!!");
-		}*/
-
-		GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-		//MyGLRenderer.checkGlError("glEnable");
-		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo[0]);
-		//MyGLRenderer.checkGlError("glBindBuffer");
+		prepareAttributes();
 		
-	    GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, u_TextureSamplerHandle);
-		GLES20.glUniform1i(u_TextureSamplerHandle, 0);
+	    GLES20.glUniform1i(u_TextureSamplerHandle, 0);
 		//MyGLRenderer.checkGlError("glBindTexture");
 		
 		GLES20.glUniformMatrix4fv(u_MVPMatrixHandle, 1, false, mMVP, 0);
 
 		/* Egy kis ellenőrzés.... */
 		Matrix.multiplyMV(res, 0, mMVP, 0, temp, 0);
-		//Log.e("MVP * vertices[0]=", res[0] + " " + res[1] + " " + res[2]);
+		Log.e("MVP * vertices[0]=", res[0] + " " + res[1] + " " + res[2]);
  		/* Ellenőrzés vége. */
 		
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, faces.size() / COORDS_PER_VERTEX);

@@ -12,12 +12,13 @@ import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
 import android.opengl.GLUtils;
+import android.opengl.Matrix;
 import android.util.Log;
 
 /**
  * A two-dimensional triangle for use as a drawn object in OpenGL ES 2.0.
  */
-public class Triangle2 {
+public class TriangleTextured {
 
 	private final String vertexShaderCode = 
 			"uniform mat4 u_MVPMatrix;"
@@ -52,9 +53,9 @@ public class Triangle2 {
 	private int u_TextureSamplerHandle;
 	
 	private static int[] textures = new int[1];
-	private int[] buffers = new int[2];
+	private int[] buffers = new int[1];
 
-	private static final boolean INTERLEAVED = true;
+	private static final boolean INTERLEAVED = false;
 	// number of coordinates per vertex in this array
 	static final int COORDS_PER_VERTEX = 3;
 	static final int COORDS_PER_TEXCOORD = 2;
@@ -114,26 +115,10 @@ public class Triangle2 {
 	private final int texcoordStrideInterleaved = (COORDS_PER_VERTEX + COORDS_PER_TEXCOORD) * TypeSizes.BYTES_PER_FLOAT;
 	//private final int texcoordOffsetInterleaved = COORDS_PER_VERTEX	* TypeSizes.BYTES_PER_FLOAT;
 
-	private void buildNonInterleavedBuffers() {
-		ByteBuffer bb = ByteBuffer.allocateDirect((triangleCoords.length + triangleTexcoords.length)
-				* TypeSizes.BYTES_PER_FLOAT);
-		bb.order(ByteOrder.nativeOrder());
-		nonInterleavedBuffer = bb.asFloatBuffer();
-		nonInterleavedBuffer.put(triangleCoords);
-		nonInterleavedBuffer.put(triangleTexcoords);
-		nonInterleavedBuffer.position(0);
-	}
-
-	private void buildInterleavedBuffer() {
-		ByteBuffer bb = ByteBuffer.allocateDirect(interleavedStuffz.length
-				* TypeSizes.BYTES_PER_FLOAT);
-		bb.order(ByteOrder.nativeOrder());
-		interleavedBuffer = bb.asFloatBuffer();
-		interleavedBuffer.put(interleavedStuffz);
-		interleavedBuffer.position(0);
-	}
-
-	public Triangle2(Context ctx) {
+	float[] tester = new float[4];
+	float[] testresult = new float[4];
+	
+	public TriangleTextured(Context ctx) {
 		this.context = ctx;
 		this.mgr = context.getAssets();
 
@@ -176,7 +161,26 @@ public class Triangle2 {
 		//MyGLRenderer.checkGlError("glGetUniformLocation");
 	}
 
-	public void prepareAttributesForInterleavedData() {
+	private void buildInterleavedBuffer() {
+		ByteBuffer bb = ByteBuffer.allocateDirect(interleavedStuffz.length
+				* TypeSizes.BYTES_PER_FLOAT);
+		bb.order(ByteOrder.nativeOrder());
+		interleavedBuffer = bb.asFloatBuffer();
+		interleavedBuffer.put(interleavedStuffz);
+		interleavedBuffer.position(0);
+	}
+	
+	private void buildNonInterleavedBuffers() {
+		ByteBuffer bb = ByteBuffer.allocateDirect((triangleCoords.length + triangleTexcoords.length)
+				* TypeSizes.BYTES_PER_FLOAT);
+		bb.order(ByteOrder.nativeOrder());
+		nonInterleavedBuffer = bb.asFloatBuffer();
+		nonInterleavedBuffer.put(triangleCoords);
+		nonInterleavedBuffer.put(triangleTexcoords);
+		nonInterleavedBuffer.position(0);
+	}
+	
+	private void prepareAttributesForInterleavedData() {
 		GLES20.glUseProgram(mProgram);
 		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0]);
 		
@@ -199,7 +203,7 @@ public class Triangle2 {
 		GLES20.glEnableVertexAttribArray(a_TexcoordHandle);
 	}
 	
-	public void prepareAttributesForNonInterleavedData() {
+	private void prepareAttributesForNonInterleavedData() {
 		GLES20.glUseProgram(mProgram);
 		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0]);
 		
@@ -222,30 +226,7 @@ public class Triangle2 {
 		GLES20.glEnableVertexAttribArray(a_TexcoordHandle);
 	}
 	
-	public void draw(float[] mvpMatrix) {
-		GLES20.glUseProgram(mProgram);
-
-		//GLES20.glEnable(GLES20.GL_TEXTURE_2D);
-		GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-
-		
-		//MyGLRenderer.checkGlError("glUniformMatrix4fv");
-		
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, u_TextureSamplerHandle);
-		//MyGLRenderer.checkGlError("glBindTexture");
-		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
-		GLES20.glUniform1i(u_TextureSamplerHandle, 0);
-		
-		GLES20.glUniformMatrix4fv(u_MVPMatrixHandle, 1, false, mvpMatrix, 0);
-		
-		MyGLRenderer.logMatrix("mvpMatrix", mvpMatrix);
-		
-		// Draw the triangle
-		GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, numberOfVertices);
-		//MyGLRenderer.checkGlError("glDrawArrays");
-	}
-	
-	public void loadTextureFromAssets() {
+	private void loadTextureFromAssets() {
 		//Get the texture from the Android resource directory
 		
 		InputStream is = null;
@@ -294,11 +275,49 @@ public class Triangle2 {
 
 				// Use the Android GLUtils to specify a two-dimensional texture image
 				// from our bitmap
-				Log.e("Mesh", "Bitmag width × height = " + bitmap.getWidth() + " × " + bitmap.getHeight());
+				//Log.e("Mesh", "Bitmag width × height = " + bitmap.getWidth() + " × " + bitmap.getHeight());
 				GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
 
 				// Clean up
 				bitmap.recycle();
 			}
 
+	private void logDrawnVertexCoordinates(float[] mvpMatrix) {
+		if(INTERLEAVED) {
+			for(int i = 0; i < 3; ++i)
+				tester[i] = interleavedBuffer.get(i);
+			}
+		else {
+			for(int i = 0; i < 3; ++i)
+				tester[i] = nonInterleavedBuffer.get(i);
+		}
+		tester[3] = 1.0f;
+		Matrix.multiplyMV(testresult, 0, mvpMatrix, 0, tester, 0);
+		Log.e("Triangle2.draw() testvalues:", testresult[0] + "   " + testresult[1] + "   " +testresult[2] + "   " + testresult[3]);
+	}
+	
+	public void draw(float[] mvpMatrix) {
+		GLES20.glUseProgram(mProgram);
+
+		//GLES20.glEnable(GLES20.GL_TEXTURE_2D);
+		GLES20.glEnable(GLES20.GL_DEPTH_TEST);
+
+		
+		//MyGLRenderer.checkGlError("glUniformMatrix4fv");
+		
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, u_TextureSamplerHandle);
+		//MyGLRenderer.checkGlError("glBindTexture");
+		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+		GLES20.glUniform1i(u_TextureSamplerHandle, 0);
+		
+		GLES20.glUniformMatrix4fv(u_MVPMatrixHandle, 1, false, mvpMatrix, 0);
+		
+		//MyGLRenderer.logMatrix("mvpMatrix", mvpMatrix);
+		
+		//logDrawnVertexCoordinates(mvpMatrix);
+		
+		// Draw the triangle
+		GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, numberOfVertices);
+		//MyGLRenderer.checkGlError("glDrawArrays");
+	}
 }
