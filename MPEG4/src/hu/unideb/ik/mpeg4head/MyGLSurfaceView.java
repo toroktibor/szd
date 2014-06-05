@@ -86,29 +86,28 @@ public class MyGLSurfaceView extends GLSurfaceView {
                 break;*/
             case MotionEvent.ACTION_DOWN:
             	if(( y < getHeight() / 3) && (x < getWidth() / 2 )){
-                	mRenderer.transX -= 1.0f;
-                	Log.d(TAG, "1. TransX--: " + mRenderer.transX);
+                	mRenderer.eyeX -= 1.0f;
+                	Log.d(TAG, "1. Eye moved to left: " + mRenderer.eyeX);
                 }
                 else if(( y < getHeight() / 3) && (x > getWidth() / 2 )){
-                	mRenderer.transX += 1.0f;
-                	Log.d(TAG, "2. TransX++: " +  mRenderer.transX);
+                	mRenderer.eyeX += 1.0f;
+                	Log.d(TAG, "2. Eye moved to right: " +  mRenderer.eyeX);
                 }
                 else if(( y < getHeight() / 3 *2) && (x < getWidth() / 2 )){
-                	mRenderer.transY -= 1.0f;
-                	Log.d(TAG, "3.  TransY-- " + mRenderer.transY);
+                	mRenderer.eyeY -= 1.0f;
+                	Log.d(TAG, "3. Eye moved up:" + mRenderer.eyeY);
                 }
                 else if(( y < getHeight() / 3 * 2) && (x > getWidth() / 2 )){
-                	mRenderer.transY += 1.0f;
-                	Log.d(TAG, "4. TransY++: " + mRenderer.transY);
+                	mRenderer.eyeY += 1.0f;
+                	Log.d(TAG, "4. Eye moved down:" + mRenderer.eyeY);
                 }
                 else if(x < getWidth() / 2 ){
-                	mRenderer.transZ -= 1.0f;
-                	Log.d(TAG, "5.  TransZ-- " + mRenderer.transZ);
-                	
+                	mRenderer.eyeZ -= 1.0f;
+                	Log.d(TAG, "5.  Eye zoomed out:" + mRenderer.eyeZ);	
                 }
                 else if(x > getWidth() / 2 ){
-                	mRenderer.transZ += 1.0f;
-                	Log.d(TAG, "6. TransZ++: " + mRenderer.transZ);
+                	mRenderer.eyeZ += 1.0f;
+                	Log.d(TAG, "6. Eye zoomed in:" + mRenderer.eyeZ);
                 	
                 }/*
             	if(y < getHeight() / 2) {

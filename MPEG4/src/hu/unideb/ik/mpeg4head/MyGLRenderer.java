@@ -24,9 +24,9 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 	private OBJParser objParser;
 
 	private Mesh mesh;
-	private Triangle t;
+	//private Triangle t;
 	private TriangleShaderLoaded tX1;
-	private TriangleTextured t2;
+	//private TriangleTextured t2;
 	
 	private Sensor gravity;
 	private SensorManager sensorMgr;
@@ -45,7 +45,6 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 	 * máshol 70... */
 	public float scaleAmount = 5.0f;
 	private float mAngle = 0.0f;
-	private float theta;
 
 	private static final float[] AxisX = { 1.0f, 0.0f, 0.0f };
 	private static final float[] AxisY = { 0.0f, 1.0f, 0.0f };
@@ -116,7 +115,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 		
 		Matrix.scaleM(mScaleMatrix, 0, scaleAmount, scaleAmount, scaleAmount);
 		//logMatrix("mScaleMatrix", mScaleMatrix);
-		Matrix.rotateM(mRotationMatrix, 0, theta, AxisY[0], AxisY[1], AxisY[2]);
+		Matrix.rotateM(mRotationMatrix, 0, mAngle, AxisY[0], AxisY[1], AxisY[2]);
 		//logMatrix("mRotationMatrix", mRotationMatrix);
 		//Log.e("TRANS", transX + " " + transY + " " + transZ);
 		Matrix.translateM(mTranslateMatrix, 0, transX, transY, transZ);
@@ -152,8 +151,6 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 		//GLES20.glEnable(GLES20.GL_DEPTH_TEST);
 		
 		GLES20.glClearColor(0.5f, 0.7f, 0.9f, 1.0f);
-		
-		theta = 0.0f;
 
 		Matrix.setIdentityM(mRotationMatrix, 0);
 		Matrix.setIdentityM(mTranslateMatrix, 0);
@@ -168,10 +165,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 		/**FONTOS! ITT KELL A RAJZOLANDÓ OBJEKTUMOKAT PÉLDÁNYSÍTANI
 		 * ÉS BEOLVASNI A MESH ADATOKAT, AZ OPENGL ES RAJZOLÓ SZÁLON!!! */
 		//t = new Triangle();
-		//tX1 = new TriangleShaderLoaded(context);
+		tX1 = new TriangleShaderLoaded(context);
 		//t2 = new TriangleTextured(context);
-		objParser = new OBJParser(context);
-		mesh = objParser.parseOBJ(modelname);
+		//objParser = new OBJParser(context);
+		//mesh = objParser.parseOBJ(modelname);
 	}
 
 	@Override
@@ -181,24 +178,14 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 
 		Matrix.setLookAtM(mViewMatrix, 0, eyeX, eyeY, eyeZ, ctrX, ctrY, ctrZ, upX, upY, upZ);
 
-		//long time = SystemClock.uptimeMillis() % 4000L;
-		//mAngle = 0.090f * ((int) time);
+		long time = SystemClock.uptimeMillis() % 4000L;
+		mAngle = 0.090f * ((int) time);
 		//Log.d(TAG, "onDrawFrame - processed rotating angle:" + mAngle);
-		//Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
+		Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
 		//Log.d(TAG, "onDrawFrame - setRotateM");
 
 		makeModelMatrix();
 		makeMVPMatrix();
-		
-		/** A Modell mátrix kiíratása teszként: */
-		/* for(int i = 0; i < 4; ++i) {
-			Log.d("Model [" + i +"]", "[" + mModelMatrix[i*4+0] + " | " + mModelMatrix[i*4+1] + " | " + mModelMatrix[i*4+2] + " | " + mModelMatrix[i*4+0] + " ]");
-		}*/
-		/** Az MVP mátrix kiíratása teszként: */
-		/*for(int i = 0; i < 4; ++i) {
-			Log.d("MVP:", "[" + mMVPMatrix[i*4+0] + " | " + mMVPMatrix[i*4+1] + " | " + mMVPMatrix[i*4+2] + " | " + mMVPMatrix[i*4+0] + " ]");
-		}*/
-		
 		
 		/** Mesh vertex adatok kiíratása teszként: */
 		/*float[] res = new float[4];
@@ -216,9 +203,9 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 		*/
 		
 		//t.draw(mMVPMatrix);
-		//tX1.draw(mMVPMatrix);
+		tX1.draw(mMVPMatrix);
 		//t2.draw(mMVPMatrix);
-		mesh.draw(mMVPMatrix);
+		//mesh.draw(mMVPMatrix);
 
 		//Log.d(TAG, "onDrawFrame finish");
 	}

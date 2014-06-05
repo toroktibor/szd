@@ -6,6 +6,8 @@ import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
+import com.example.android.opengl.R;
+
 import android.content.Context;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
@@ -15,9 +17,6 @@ import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.util.Log;
 
-/**
- * A two-dimensional triangle for use as a drawn object in OpenGL ES 2.0.
- */
 public class TriangleTextured {
 
 	private final String vertexShaderCode = 
@@ -43,20 +42,20 @@ public class TriangleTextured {
 	private FloatBuffer nonInterleavedBuffer;
 	private FloatBuffer interleavedBuffer;
 
-	private final int mProgram;
-	private final int vertexShader;
-	private final int fragmentShader;
+	private int mProgram;
+	private int vertexShader;
+	private int fragmentShader;
 	
 	private int a_PositionHandle;
 	private int a_TexcoordHandle;
 	private int u_MVPMatrixHandle;
 	private int u_TextureSamplerHandle;
 	
-	private static int[] textures = new int[1];
+	private int[] textures = new int[1];
 	private int[] buffers = new int[1];
 
-	private static final boolean INTERLEAVED = false;
-	// number of coordinates per vertex in this array
+	private static final boolean INTERLEAVED = true;
+
 	static final int COORDS_PER_VERTEX = 3;
 	static final int COORDS_PER_TEXCOORD = 2;
 
@@ -132,18 +131,15 @@ public class TriangleTextured {
 		GLES20.glUseProgram(mProgram);
 		Log.e("glGetProgramInfo:", GLES20.glGetProgramInfoLog(mProgram));
 		prepareHandles();
-		loadTextureFromAssets();
-		
+		//loadTextureFromAssets();
+		loadTextureFromResource();
 		GLES20.glGenBuffers(1, buffers, 0);
-		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, buffers[0]);		
 		
 		if (INTERLEAVED) {
 			buildInterleavedBuffer();
-			prepareAttributesForInterleavedData();
 			
 		} else {
 			buildNonInterleavedBuffers();
-			prepareAttributesForNonInterleavedData();
 		}		
 	}
 	
@@ -193,7 +189,7 @@ public class TriangleTextured {
 									interleavedBuffer);
 		GLES20.glEnableVertexAttribArray(a_PositionHandle);		
 		
-		interleavedBuffer.position(COORDS_PER_VERTEX * numberOfVertices);
+		interleavedBuffer.position(COORDS_PER_VERTEX);
 		GLES20.glVertexAttribPointer(a_TexcoordHandle, 
 									COORDS_PER_TEXCOORD, 
 									GLES20.GL_FLOAT, 
@@ -216,7 +212,7 @@ public class TriangleTextured {
 									nonInterleavedBuffer);
 		GLES20.glEnableVertexAttribArray(a_PositionHandle);		
 		
-		nonInterleavedBuffer.position(COORDS_PER_VERTEX);
+		nonInterleavedBuffer.position(COORDS_PER_VERTEX * numberOfVertices);
 		GLES20.glVertexAttribPointer(a_TexcoordHandle, 
 									COORDS_PER_TEXCOORD, 
 									GLES20.GL_FLOAT, 
@@ -226,12 +222,36 @@ public class TriangleTextured {
 		GLES20.glEnableVertexAttribArray(a_TexcoordHandle);
 	}
 	
-	private void loadTextureFromAssets() {
-		//Get the texture from the Android resource directory
+	private void loadTextureFromResource() {
 		
 		InputStream is = null;
+		Bitmap bitmap = BitmapFactory.decodeResource(context.getResources(), R.drawable.face_texture_jpg);
+		GLES20.glUseProgram(mProgram);
+		GLES20.glGenTextures(1, textures, 0);
+		u_TextureSamplerHandle = textures[0];
+
+		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, u_TextureSamplerHandle);
+		
+		GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+	    GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+	    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT);
+	    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT);
+		GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
+		GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
+		GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT);
+		GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT);
+
+		Log.e("TriangleTextured.loadTextureFromResource()", "Bitmag width × height = " + bitmap.getWidth() + " × " + bitmap.getHeight());
+		GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
+
+		bitmap.recycle();
+}
+	
+	private void loadTextureFromAssets() {
+		InputStream is = null;
 		try {
-			String textureFileName = "0.png";
+			String textureFileName = "face_texture.png";
 			is = mgr.open(textureFileName);
 			Log.e("Triangle2", "Loading texture file: " + textureFileName);
 		} catch (IOException e1) {
@@ -241,41 +261,28 @@ public class TriangleTextured {
 
 		Bitmap bitmap = null;
 		try {
-			//BitmapFactory is an Android graphics utility for images
 			bitmap = BitmapFactory.decodeStream(is);
-
 		} finally {
-			//Always clear and close
 			try {
 				is.close();
 				is = null;
 			} catch (IOException e) {
 			}
 		}
-
-		// Generate one texture pointer...
 				GLES20.glGenTextures(1, textures, 0);
 				u_TextureSamplerHandle = textures[0];
-				// ...and bind it to our array
 				GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, u_TextureSamplerHandle);
 				
 				GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
 			    GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-
 			    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT);
 			    GLES20.glTexParameteri(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT);
-				
-			    // Create Nearest Filtered Texture
 				GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MIN_FILTER, GLES20.GL_NEAREST);
 				GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_MAG_FILTER, GLES20.GL_LINEAR);
-
-				// Different possible texture parameters, e.g. GL10.GL_CLAMP_TO_EDGE
 				GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_S, GLES20.GL_REPEAT);
 				GLES20.glTexParameterf(GLES20.GL_TEXTURE_2D, GLES20.GL_TEXTURE_WRAP_T, GLES20.GL_REPEAT);
 
-				// Use the Android GLUtils to specify a two-dimensional texture image
-				// from our bitmap
-				//Log.e("Mesh", "Bitmag width × height = " + bitmap.getWidth() + " × " + bitmap.getHeight());
+				Log.e("TriangleTextured.loadTextureFromAssets()", "Bitmag width × height = " + bitmap.getWidth() + " × " + bitmap.getHeight());
 				GLUtils.texImage2D(GLES20.GL_TEXTURE_2D, 0, bitmap, 0);
 
 				// Clean up
@@ -298,26 +305,23 @@ public class TriangleTextured {
 	
 	public void draw(float[] mvpMatrix) {
 		GLES20.glUseProgram(mProgram);
+		if(INTERLEAVED) {
+			prepareAttributesForInterleavedData();
+		}
+		else {
+			prepareAttributesForNonInterleavedData();
+		}
 
-		//GLES20.glEnable(GLES20.GL_TEXTURE_2D);
 		GLES20.glEnable(GLES20.GL_DEPTH_TEST);
 
-		
-		//MyGLRenderer.checkGlError("glUniformMatrix4fv");
-		
-		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, u_TextureSamplerHandle);
-		//MyGLRenderer.checkGlError("glBindTexture");
 		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, u_TextureSamplerHandle);
 		GLES20.glUniform1i(u_TextureSamplerHandle, 0);
 		
 		GLES20.glUniformMatrix4fv(u_MVPMatrixHandle, 1, false, mvpMatrix, 0);
+
+		logDrawnVertexCoordinates(mvpMatrix);
 		
-		//MyGLRenderer.logMatrix("mvpMatrix", mvpMatrix);
-		
-		//logDrawnVertexCoordinates(mvpMatrix);
-		
-		// Draw the triangle
 		GLES20.glDrawArrays(GLES20.GL_TRIANGLES, 0, numberOfVertices);
-		//MyGLRenderer.checkGlError("glDrawArrays");
 	}
 }

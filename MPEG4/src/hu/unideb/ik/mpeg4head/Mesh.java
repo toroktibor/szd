@@ -115,15 +115,8 @@ public class Mesh {
 		vAndVtBuf.order(ByteOrder.nativeOrder()); // csak egy nagy buffert
 													// készítünk
 		vboBuffer = vAndVtBuf.asFloatBuffer();
-		vboBuffer.put(ArrayBufferConverter.getFloatArrayFromFloatVector(v)); // beletöltjük
-																				// először
-																				// a
-																				// vertex
-																				// koodrinátákat
-		vboBuffer.put(ArrayBufferConverter.getFloatArrayFromFloatVector(vt)); // aztán
-																				// a
-																				// textúra
-																				// koordinátákat
+		vboBuffer.put(ArrayBufferConverter.getFloatArrayFromFloatVector(v)); // beletöltjük először a koodrinátákat
+		vboBuffer.put(ArrayBufferConverter.getFloatArrayFromFloatVector(vt)); // aztán a textúra koordinátákat
 		vboBuffer.position(0);
 	}
 */
@@ -284,23 +277,22 @@ public class Mesh {
 		}*/
 		
 		vboBuffer.position(0);
-		GLES20.glEnableVertexAttribArray(a_PositionHandle);	
 		GLES20.glVertexAttribPointer(a_PositionHandle, 
 									COORDS_PER_VERTEX, 
 									GLES20.GL_FLOAT, 
 									false, 
 									STRIDE_OF_ATTRIBS, 
 									vboBuffer);
-	
+		GLES20.glEnableVertexAttribArray(a_PositionHandle);	
 		
 		vboBuffer.position(COORDS_PER_VERTEX);
-		GLES20.glEnableVertexAttribArray(a_TexCoordinateHandle);
 		GLES20.glVertexAttribPointer(a_TexCoordinateHandle, 
 									COORDS_PER_TEXCOORDS, 
 									GLES20.GL_FLOAT, 
 									false, 
 									STRIDE_OF_ATTRIBS, 
 									vboBuffer);
+		GLES20.glEnableVertexAttribArray(a_TexCoordinateHandle);
 
 	}
 
@@ -363,6 +355,8 @@ public class Mesh {
 		GLES20.glUseProgram(mProgram);
 		prepareAttributes();
 		
+		GLES20.glActiveTexture(GLES20.GL_TEXTURE0);
+		GLES20.glBindTexture(GLES20.GL_TEXTURE_2D, u_TextureSamplerHandle);
 	    GLES20.glUniform1i(u_TextureSamplerHandle, 0);
 		//MyGLRenderer.checkGlError("glBindTexture");
 		

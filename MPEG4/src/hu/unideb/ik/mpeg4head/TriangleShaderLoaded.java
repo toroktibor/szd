@@ -17,14 +17,20 @@ package hu.unideb.ik.mpeg4head;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.nio.FloatBuffer;
 
+import com.example.android.opengl.R;
+
 import android.content.Context;
 import android.content.res.AssetManager;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.opengl.GLES20;
+import android.opengl.GLUtils;
 import android.opengl.Matrix;
 import android.util.Log;
 
@@ -46,7 +52,11 @@ public class TriangleShaderLoaded {
     private int mPositionHandle;
     private int mColorHandle;
     private int mMVPMatrixHandle;
+    private int textureHandle;
     
+    private int[] textures = new int[1];
+    
+    private Context ctx;
     private AssetManager assetMgr;
 
 
@@ -67,14 +77,17 @@ public class TriangleShaderLoaded {
      * Sets up the drawing object data for use in an OpenGL ES context.
      */   
     public TriangleShaderLoaded(Context context) {
-    	assetMgr = context.getAssets();
+    	ctx = context;
+    	assetMgr = ctx.getAssets();
 
     	buildBuffer();
     	prepareShadersAndProgram("triangleVertexShader.glsl", "triangleFragmentShader.glsl");
         prepareHandles();
     }
     
-    private void buildBuffer() {
+    
+
+	private void buildBuffer() {
     	ByteBuffer bb = ByteBuffer.allocateDirect(triangleCoords.length * TypeSizes.BYTES_PER_FLOAT);
         bb.order(ByteOrder.nativeOrder());
         vertexBuffer = bb.asFloatBuffer();
@@ -125,11 +138,12 @@ public class TriangleShaderLoaded {
     }
     
     private void prepareAttributes() {
-    	GLES20.glEnableVertexAttribArray(mPositionHandle);
+
         GLES20.glVertexAttribPointer(
                 mPositionHandle, COORDS_PER_VERTEX,
                 GLES20.GL_FLOAT, false,
                 vertexStride, vertexBuffer);        
+    	GLES20.glEnableVertexAttribArray(mPositionHandle);
     }
     
     float[] tester = new float[4];
