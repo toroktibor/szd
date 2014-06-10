@@ -23,13 +23,11 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 	private String modelname;
 	private OBJParser objParser;
 
-	private Mesh mesh;
+	//private Mesh mesh;
 	//private Triangle t;
-	private TriangleShaderLoaded tX1;
+	//private TriangleShaderLoaded tX1;
 	//private TriangleTextured t2;
-	
-	private Sensor gravity;
-	private SensorManager sensorMgr;
+	private MeshOnlyColored meshColored;
 
 	private float[] mMVPMatrix = new float[16];
 	private float[] mModelMatrix = new float[16];
@@ -42,10 +40,13 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 	private float[] mScaleMatrix = new float[16];
 	
 	/* A Triangle háromszögnél 5 volt az ideális scaleAmount!!!
-	 * máshol 70... */
-	public float scaleAmount = 5.0f;
-	private float mAngle = 0.0f;
-
+	 * itt úgy néz ki, hogy itt 10 körül... */
+	public float scaleAmount = 18.0f;
+	
+	private float xRotAngle = 0.0f;
+	private float yRotAngle = 0.0f;
+	private float zRotAngle = 0.0f;
+	
 	private static final float[] AxisX = { 1.0f, 0.0f, 0.0f };
 	private static final float[] AxisY = { 0.0f, 1.0f, 0.0f };
 	private static final float[] AxisZ = { 0.0f, 0.0f, 1.0f };
@@ -71,28 +72,9 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 	public float transY = 0.0f;
 	public float transZ = 0.0f;
 
-	private float diffGravityX;
-	private float diffGravityY;
-	private float diffGravityZ;
-
-	private float originGravityX;
-	private float originGravityY;
-	private float originGravityZ;
-
-	private float newGravityX;
-	private float newGravityY;
-	private float newGravityZ;
-
-	private static final float epsilon = 0.45f;
-
-	private boolean newOrientation = true;
 
 	public MyGLRenderer(Context ctx) {
 		context = ctx;
-		sensorMgr = (SensorManager) context
-				.getSystemService(Context.SENSOR_SERVICE);
-		gravity = sensorMgr.getDefaultSensor(Sensor.TYPE_GRAVITY);
-		
 		modelname = "texture_face_final_meshlab.obj";
 		//modelname = "dragon.obj";
 	}
@@ -115,8 +97,11 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 		
 		Matrix.scaleM(mScaleMatrix, 0, scaleAmount, scaleAmount, scaleAmount);
 		//logMatrix("mScaleMatrix", mScaleMatrix);
-		Matrix.rotateM(mRotationMatrix, 0, mAngle, AxisY[0], AxisY[1], AxisY[2]);
-		//logMatrix("mRotationMatrix", mRotationMatrix);
+		
+		Matrix.rotateM(mRotationMatrix, 0, yRotAngle, AxisY[0], AxisY[1], AxisY[2]);
+		Matrix.rotateM(tempMatrix, 0, mRotationMatrix, 0, xRotAngle, AxisX[0], AxisX[1], AxisX[2]);
+		Matrix.rotateM(mRotationMatrix, 0, tempMatrix, 0, zRotAngle, AxisZ[0], AxisZ[1], AxisZ[2]);
+	//logMatrix("mRotationMatrix", mRotationMatrix);
 		//Log.e("TRANS", transX + " " + transY + " " + transZ);
 		Matrix.translateM(mTranslateMatrix, 0, transX, transY, transZ);
 		//logMatrix("mTranslateMatrix", mTranslateMatrix);
@@ -149,7 +134,7 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 	public void onSurfaceCreated(GL10 unused, EGLConfig config) {
 
 		//GLES20.glEnable(GLES20.GL_DEPTH_TEST);
-		
+		GLES20.glDisable(GLES20.GL_CULL_FACE);
 		GLES20.glClearColor(0.5f, 0.7f, 0.9f, 1.0f);
 
 		Matrix.setIdentityM(mRotationMatrix, 0);
@@ -165,11 +150,14 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 		/**FONTOS! ITT KELL A RAJZOLANDÓ OBJEKTUMOKAT PÉLDÁNYSÍTANI
 		 * ÉS BEOLVASNI A MESH ADATOKAT, AZ OPENGL ES RAJZOLÓ SZÁLON!!! */
 		//t = new Triangle();
-		tX1 = new TriangleShaderLoaded(context);
+		//tX1 = new TriangleShaderLoaded(context);
 		//t2 = new TriangleTextured(context);
-		//objParser = new OBJParser(context);
+		objParser = new OBJParser(context);
 		//mesh = objParser.parseOBJ(modelname);
+		meshColored = objParser.parseOBJToColoredMesh(modelname);
+		
 	}
+	
 
 	@Override
 	public void onDrawFrame(GL10 unused) {
@@ -178,10 +166,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 
 		Matrix.setLookAtM(mViewMatrix, 0, eyeX, eyeY, eyeZ, ctrX, ctrY, ctrZ, upX, upY, upZ);
 
-		long time = SystemClock.uptimeMillis() % 4000L;
-		mAngle = 0.090f * ((int) time);
+		//long time = SystemClock.uptimeMillis() % 4000L;
+		//mAngle = 0.090f * ((int) time);
 		//Log.d(TAG, "onDrawFrame - processed rotating angle:" + mAngle);
-		Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
+		//Matrix.setRotateM(mRotationMatrix, 0, mAngle, 0, 0, 1.0f);
 		//Log.d(TAG, "onDrawFrame - setRotateM");
 
 		makeModelMatrix();
@@ -203,10 +191,10 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 		*/
 		
 		//t.draw(mMVPMatrix);
-		tX1.draw(mMVPMatrix);
+		//tX1.draw(mMVPMatrix);
 		//t2.draw(mMVPMatrix);
 		//mesh.draw(mMVPMatrix);
-
+		meshColored.draw(mMVPMatrix);
 		//Log.d(TAG, "onDrawFrame finish");
 	}
 
@@ -239,52 +227,30 @@ public class MyGLRenderer implements GLSurfaceView.Renderer /*,
 		}
 	}
 
-	public float getAngle() {
-		return mAngle;
+	public float getxRotAngle() {
+		return xRotAngle;
 	}
 
-	public void setAngle(float angle) {
-		mAngle = angle;
+	public void setxRotAngle(float xRotAngle) {
+		this.xRotAngle = xRotAngle;
 	}
 
-	/*
-	@Override
-	public void onAccuracyChanged(Sensor sensor, int accuracy) {
-		Log.d(TAG, "onSensorChanged accuracy = " + accuracy);
+	public float getyRotAngle() {
+		return yRotAngle;
 	}
 
-	@Override
-	public void onSensorChanged(SensorEvent event) {
-		Log.d(TAG, "onSensorChanged begin");
-
-		switch (event.sensor.getType()) {
-		case Sensor.TYPE_GRAVITY:
-			Log.d(TAG,
-					"onSensorChanged - gravity sensor values coming, Baby :)");
-			if (newOrientation) {
-				originGravityX = event.values[0];
-				originGravityY = event.values[1];
-				originGravityZ = event.values[2];
-				newOrientation = false;
-			}
-
-			newGravityX = event.values[0];
-			newGravityY = event.values[1];
-			newGravityZ = event.values[2];
-			diffGravityX = originGravityX - newGravityX;
-			diffGravityY = originGravityY - newGravityY;
-			diffGravityZ = originGravityZ - newGravityZ;
-			if ((diffGravityX > epsilon) || (diffGravityY > epsilon)
-					|| (diffGravityZ > epsilon)) {
-				Log.d(TAG, "onSensorChanged - some changes greater then epsilon...");
-			}
-
-			break;
-		default:
-			break;
-		}
-
-		Log.d(TAG, "onSensorChanged finish");
+	public void setyRotAngle(float yRotAngle) {
+		this.yRotAngle = yRotAngle;
 	}
-	 */
+
+	public float getzRotAngle() {
+		return zRotAngle;
+	}
+
+	public void setzRotAngle(float zRotAngle) {
+		this.zRotAngle = zRotAngle;
+	}
+
+
+	
 }

@@ -113,6 +113,89 @@ public class OBJParser {
 		Log.d(TAG, "ERROR! No material file found with specified name(s)...");
 		return null;
 	}
+	
+	public MeshOnlyColored parseOBJToColoredMesh(String fileName) {
+		BufferedReader reader = null;
+		String line = null;
+		Material m = null;
+		Log.e(TAG, "parseOBJ RUNNING");
+		try {
+			/* Az asset mappából az .obj fájl betöltése. */
+			reader = new BufferedReader(new InputStreamReader(
+					assetMgr.open(fileName)));
+		} catch (IOException e) {
+		}
+		/*Feldolgozzuk az egész .obj fájlt*/
+		try { 
+			/* Amíg van az új sorban tartalom ... */
+			while ((line = reader.readLine()) != null) {
+				//Log.e("obj", line);
+				/* Ez a sor felület pontjainak indexeit tartalmazza, aszerint dolgozzuk fel. */
+				if (line.startsWith("f")) 			readFLine(line);
+				/* Ez a sor normálvektorokat tartalmaz, aszerint dolgozzuk fel. */
+				else if (line.startsWith("vn")) 	readVNLine(line); 
+				/* Ez a sor textúra koordinátákat tartalmaz, aszerint dolgozzuk fel. */
+				else if (line.startsWith("vt"))		readVTLine(line);
+				/* Ez a sor vertex koordinátákat tartalmaz, aszerint dolgozzuk fel. */
+				else if (line.startsWith("v"))		readVLine(line);
+				/* Ez a sor material információkat tartalmaz, aszerint dolgozzuk fel. */
+				else if (line.startsWith("usemtl")) {
+					try {						
+						/* Ha ez nem egy új csoport első sora, akkor ... */
+						if (faces.size() != 0) {
+							/* ... az eddig beolvasott adatokból létrehozunk egy részmodellt. */
+							TDModelPart model = new TDModelPart(faces,
+									vtPointer, vnPointer, m, vn);
+							Log.e(TAG, "TDModelPart added!!!!!!!");
+							parts.add(model);
+						}
+						/* Kiolvassuk a fájl nevét. */
+						String mtlName = line.split("[ ]+", 2)[1];
+						/* A már beolvasott material-ok között megnézzük, nincs-e már ott ez is. */
+						for (int i = 0; i < materials.size(); i++) {
+							m = materials.get(i);
+							if (m.getName().equals(mtlName)) {
+								break;
+							}
+							/* Ha még nincs beolvasva, akkor kinullozzuk. */
+							m = null;
+						}
+						faces = new Vector<Integer>();
+						vtPointer = new Vector<Short>();
+						vnPointer = new Vector<Short>();
+					} catch (Exception e) {
+						// TODO: handle exception
+					}
+				} else if (line.startsWith("mtllib")) {
+					//Log.d(TAG, "mtllib");
+					String matName =  line.split("[ ]+")[1];
+					//Log.d(TAG, "Name of the material is: " + matName);
+					materials = MTLParser.loadMTL(context,matName);
+					for (int i = 0; i < materials.size(); i++) {
+						Material mat = materials.get(i);
+						//Log.e("materials", mat.toString());
+					}
+				}
+			}
+		} catch (IOException e) {
+			System.out.println("wtf...");
+		}
+		if (faces != null) {// if not this is not the start of the first group
+			TDModelPart model = new TDModelPart(faces, vtPointer, vnPointer, m,
+					vn);
+			parts.add(model);
+		}
+		Log.d(TAG, "v.size=" + v.size()); 
+		Log.d(TAG, "vtPointer.size()=" + vtPointer.size());
+		Log.d(TAG, "faces.size()=" + faces.size());
+		if(materials.size() != 0) {
+			MeshOnlyColored meshColored = new MeshOnlyColored(context, v, faces);
+			//Log.d(TAG, mesh.toString());
+			return meshColored;
+		}
+		Log.d(TAG, "ERROR! No material file found with specified name(s)...");
+		return null;
+	}
 
 	private void readVLine(String line) {
 		String[] tokens = line.split("[ ]+"); // split the line at the spaces

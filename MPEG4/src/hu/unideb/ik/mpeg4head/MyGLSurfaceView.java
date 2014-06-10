@@ -27,8 +27,12 @@ import android.view.MotionEvent;
  */
 public class MyGLSurfaceView extends GLSurfaceView {
 
-    private final MyGLRenderer mRenderer;
+    public final MyGLRenderer mRenderer;
     private static final String TAG = "MyGLRSurfaceView";
+    
+    public MyGLRenderer getRenderer() {
+    	return mRenderer;
+    }
 
     public MyGLSurfaceView(Context context) {
     	super(context);
@@ -49,65 +53,53 @@ public class MyGLSurfaceView extends GLSurfaceView {
         //setRenderMode(GLSurfaceView.RENDERMODE_WHEN_DIRTY);
     }
 
-    private final float TOUCH_SCALE_FACTOR = 180.0f / 320;
-    private float mPreviousX;
-    private float mPreviousY;
-
     @Override
     public boolean onTouchEvent(MotionEvent e) {
-        // MotionEvent reports input details from the touch screen
-        // and other input controls. In this case, you are only
-        // interested in events where the touch position changed.
-    	//Log.d(TAG, "onTouchEvent begin");
+  
         float x = e.getX();
         float y = e.getY();
 
         switch (e.getAction()) {
-            /*case MotionEvent.ACTION_MOVE:
-            	
-                float dx = x - mPreviousX;
-                float dy = y - mPreviousY;
-
-                // reverse direction of rotation above the mid-line
-                if (y > getHeight() / 2) {
-                    dx = dx * -1 ;
-                }
-
-                // reverse direction of rotation to left of the mid-line
-                if (x < getWidth() / 2) {
-                    dy = dy * -1 ;
-                }
-                
-
-                mRenderer.setAngle(
-                        mRenderer.getAngle() +
-                        ((dx + dy) * TOUCH_SCALE_FACTOR));  // = 180.0f / 320
-                requestRender();
-                break;*/
+            case MotionEvent.ACTION_MOVE:
+            	Log.d("ScaleAmount", "" + x);
+                mRenderer.scaleAmount= x / 420.0f;
+                break;
             case MotionEvent.ACTION_DOWN:
             	if(( y < getHeight() / 3) && (x < getWidth() / 2 )){
-                	mRenderer.eyeX -= 1.0f;
-                	Log.d(TAG, "1. Eye moved to left: " + mRenderer.eyeX);
+                	//mRenderer.eyeX -= 1.0f;
+                	//Log.d(TAG, "1. Eye moved to left: " + mRenderer.eyeX);
+            		mRenderer.transX -= 2.0f;
+            		Log.d(TAG, "1. TransX: " + mRenderer.transX);
                 }
                 else if(( y < getHeight() / 3) && (x > getWidth() / 2 )){
-                	mRenderer.eyeX += 1.0f;
-                	Log.d(TAG, "2. Eye moved to right: " +  mRenderer.eyeX);
+                	//mRenderer.eyeX += 1.0f;
+                	//Log.d(TAG, "2. Eye moved to right: " +  mRenderer.eyeX);
+                	mRenderer.transX += 2.0f;
+                	Log.d(TAG, "2. TransX: " + mRenderer.transX);
                 }
                 else if(( y < getHeight() / 3 *2) && (x < getWidth() / 2 )){
-                	mRenderer.eyeY -= 1.0f;
-                	Log.d(TAG, "3. Eye moved up:" + mRenderer.eyeY);
+                	//mRenderer.eyeY -= 1.0f;
+                	//Log.d(TAG, "3. Eye moved up:" + mRenderer.eyeY);
+                	mRenderer.transY -= 2.0f;
+                	Log.d(TAG, "3. TransY: " + mRenderer.transY);
                 }
                 else if(( y < getHeight() / 3 * 2) && (x > getWidth() / 2 )){
-                	mRenderer.eyeY += 1.0f;
-                	Log.d(TAG, "4. Eye moved down:" + mRenderer.eyeY);
+                	//mRenderer.eyeY += 1.0f;
+                	//Log.d(TAG, "4. Eye moved down:" + mRenderer.eyeY);
+                	mRenderer.transY += 2.0f;
+                	Log.d(TAG, "4. TransY: " + mRenderer.transY);
                 }
                 else if(x < getWidth() / 2 ){
-                	mRenderer.eyeZ -= 1.0f;
-                	Log.d(TAG, "5.  Eye zoomed out:" + mRenderer.eyeZ);	
+                	//mRenderer.eyeZ -= 1.0f;
+                	//Log.d(TAG, "5.  Eye zoomed out:" + mRenderer.eyeZ);	
+                	mRenderer.transZ -= 2.0f;
+                	Log.d(TAG, "5. TransZ: " + mRenderer.transZ);
                 }
                 else if(x > getWidth() / 2 ){
-                	mRenderer.eyeZ += 1.0f;
-                	Log.d(TAG, "6. Eye zoomed in:" + mRenderer.eyeZ);
+                	//mRenderer.eyeZ += 1.0f;
+                	//Log.d(TAG, "6. Eye zoomed in:" + mRenderer.eyeZ);
+                	mRenderer.transZ += 2.0f;
+                	Log.d(TAG, "6. TransZ: " + mRenderer.transZ);
                 	
                 }/*
             	if(y < getHeight() / 2) {
@@ -119,8 +111,7 @@ public class MyGLSurfaceView extends GLSurfaceView {
             	requestRender();
             	break;
         }
-        mPreviousX = x;
-        mPreviousY = y;
+
     	//Log.d(TAG, "onTouchEvent finish");
         return true;
     }

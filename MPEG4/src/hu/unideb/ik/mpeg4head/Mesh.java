@@ -25,11 +25,9 @@ public class Mesh {
 	/* Number of coordinates per vertex. */
 	private static final int COORDS_PER_VERTEX = 3;
 	private static final int COORDS_PER_TEXCOORDS = 2;
-	private static final int STRIDE_OF_ATTRIBS = (COORDS_PER_TEXCOORDS + COORDS_PER_VERTEX)
-			* TypeSizes.BYTES_PER_FLOAT;
+	private static final int STRIDE_OF_ATTRIBS = COORDS_PER_VERTEX * TypeSizes.BYTES_PER_FLOAT;
 	private static final int VERTEX_OFFSET = 0;
-	private static final int TEXCOORD_OFFSET = COORDS_PER_VERTEX
-			* TypeSizes.BYTES_PER_FLOAT;
+	private static final int TEXCOORD_OFFSET = COORDS_PER_VERTEX * TypeSizes.BYTES_PER_FLOAT;
 	private static final String TAG = "Mesh";
 
 	/*
@@ -85,10 +83,16 @@ public class Mesh {
 		GLES20.glGenBuffers(1, vbo, 0);
 		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, vbo[0]);
 
-		buildOneInterleavedBuffer();
+		buildOneBuffer();
 		prepareShadersAndProgram("vertexShaderNew.vsh", "fragmentShaderNew.fsh");
 		prepareHandles();
 		loadTextureFromAssets();
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, a_PositionHandle);
+		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, faces.size() , vboBuffer, GLES20.GL_STATIC_DRAW);
+		vboBuffer.position(COORDS_PER_VERTEX * faces.size());
+		GLES20.glBindBuffer(GLES20.GL_ARRAY_BUFFER, a_TexCoordinateHandle);
+		GLES20.glBufferData(GLES20.GL_ARRAY_BUFFER, faces.size(), vboBuffer, GLES20.GL_STATIC_DRAW);
+		
 	}
 
 /*	public void buildDifferentBuffers() {
@@ -107,11 +111,10 @@ public class Mesh {
 				.getFloatArrayFromFloatVector(vt));
 		texcoordsBuffer.position(0);
 	}
-
+*/
 	public void buildOneBuffer() {
-		ByteBuffer vAndVtBuf = ByteBuffer.allocateDirect(v.size()
-				* TypeSizes.BYTES_PER_FLOAT + vt.size()
-				* TypeSizes.BYTES_PER_FLOAT);
+		ByteBuffer vAndVtBuf = ByteBuffer.allocateDirect(v.size() * TypeSizes.BYTES_PER_FLOAT 
+														+ vt.size() * TypeSizes.BYTES_PER_FLOAT);
 		vAndVtBuf.order(ByteOrder.nativeOrder()); // csak egy nagy buffert
 													// készítünk
 		vboBuffer = vAndVtBuf.asFloatBuffer();
@@ -119,7 +122,6 @@ public class Mesh {
 		vboBuffer.put(ArrayBufferConverter.getFloatArrayFromFloatVector(vt)); // aztán a textúra koordinátákat
 		vboBuffer.position(0);
 	}
-*/
 	// MŰKÖDIK!!!
 	public void buildOneInterleavedBuffer() {
 		/*
@@ -285,7 +287,7 @@ public class Mesh {
 									vboBuffer);
 		GLES20.glEnableVertexAttribArray(a_PositionHandle);	
 		
-		vboBuffer.position(COORDS_PER_VERTEX);
+		vboBuffer.position(COORDS_PER_VERTEX * faces.size() );
 		GLES20.glVertexAttribPointer(a_TexCoordinateHandle, 
 									COORDS_PER_TEXCOORDS, 
 									GLES20.GL_FLOAT, 
